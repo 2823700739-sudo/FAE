@@ -25,14 +25,14 @@
             "id": "a8a4b006b16b05ca",
             "type": "leaf",
             "state": {
-              "type": "split-diff-view",
+              "type": "markdown",
               "state": {
-                "aFile": "FAE/hello.md",
-                "bFile": "FAE/hello.md",
-                "aRef": ""
+                "file": "FAE/TEST.md",
+                "mode": "source",
+                "source": false
               },
-              "icon": "diff",
-              "title": "Diff: hello  (Working Tree)"
+              "icon": "lucide-file",
+              "title": "TEST"
             }
           }
         ],
@@ -114,6 +114,7 @@
             "state": {
               "type": "backlink",
               "state": {
+                "file": "FAE/TEST.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -132,6 +133,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
+                "file": "FAE/TEST.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -174,6 +176,7 @@
             "state": {
               "type": "outline",
               "state": {
+                "file": "FAE/TEST.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
