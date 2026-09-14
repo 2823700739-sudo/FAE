@@ -20,8 +20,23 @@
               "icon": "lucide-file",
               "title": "TEST"
             }
+          },
+          {
+            "id": "a8a4b006b16b05ca",
+            "type": "leaf",
+            "state": {
+              "type": "split-diff-view",
+              "state": {
+                "aFile": "FAE/hello.md",
+                "bFile": "FAE/hello.md",
+                "aRef": ""
+              },
+              "icon": "diff",
+              "title": "Diff: hello  (Working Tree)"
+            }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -99,7 +114,6 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "FAE/TEST.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -118,7 +132,6 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "FAE/TEST.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               },
@@ -161,7 +174,6 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "FAE/TEST.md",
                 "followCursor": false,
                 "showSearch": false,
                 "searchQuery": ""
@@ -169,13 +181,25 @@
               "icon": "lucide-list",
               "title": "大纲"
             }
+          },
+          {
+            "id": "de35250b76f54052",
+            "type": "leaf",
+            "pinned": true,
+            "state": {
+              "type": "git-view",
+              "state": {},
+              "pinned": true,
+              "icon": "git-pull-request",
+              "title": "Source Control"
+            }
           }
-        ]
+        ],
+        "currentTab": 5
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "left-ribbon": {
     "hiddenItems": {
@@ -189,10 +213,11 @@
       "obsidian-git:Open Git source control": false
     }
   },
-  "active": "0f8454b755719565",
+  "active": "a8a4b006b16b05ca",
   "lastOpenFiles": [
-    "新建 文本文档.txt",
+    "FAE/hello.md",
     "FAE/TEST.md",
+    "新建 文本文档.txt",
     "FAE"
   ]
 }
