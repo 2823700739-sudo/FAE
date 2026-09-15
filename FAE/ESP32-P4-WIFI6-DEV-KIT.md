@@ -1,0 +1,78 @@
+---
+产品: ESP32-P4-WIFI6-DEV-KIT
+tags: [FAE, ESP32-P4, USB, 音频, 烧录]
+商品链接: https://www.waveshare.net/shop/ESP32-P4-WIFI6-DEV-KIT.htm
+---
+
+# ESP32-P4-WIFI6-DEV-KIT
+
+### USB 设备直连 1 号口正常，经 CH334 HUB 的 2～4 号口无法识别
+- **客户问题/现象**：扫码枪或其他 USB 设备接 1 号口正常，接 2～4 号口无响应。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT；相同结构也见 ESP32-P4-Module-DEV-KIT-A。
+- **根因**：1 号口直连 ESP32-P4，2～4 号口经 CH334 HUB；固件可能未开启 HUB，或 FS/LS 设备触发当前 HS Host 经 HUB 不支持 TT 的限制。
+- **回复内容（解决方法）**：先确认跳线位置与硬件版本，再启用 `CONFIG_USB_HOST_HUBS_SUPPORTED=y` 并加载设备类驱动。若日志提示 FS/LS Transaction Translator 不支持，暂用 1 号直连接口，不能直接判定 CH334 损坏。
+- **相关报错/日志**：`Connected device is FS, transaction translator (TT) is not supported`；无日志时需补充设备类型与 ESP-IDF 版本。
+
+### 四个 USB 口中哪个支持 OTG Device，另一个 Type-C 能否复用
+- **客户问题/现象**：确认四个 Type-A 与 `USB1.1 Type-C` 的 Host/Device 能力。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：四个 Type-A 属于 USB 2.0 HS OTG 通路；`USB1.1 Type-C` 连接 GPIO24/25，默认用于 USB-Serial/JTAG，硬件 CC 下拉使其更适合作为设备端。
+- **回复内容（解决方法）**：`USB1.1 Type-C` 可由 TinyUSB/USB Device Stack 复用为 CDC/HID/MSC 等 Device，但只有 Full-Speed 12 Mbps，启用后会占用原 USB-Serial/JTAG。Type-C UART 口只是 CH343 串口，不能复用为 OTG。四个 Type-A 的 HS 理论速率为 480 Mbps。
+- **相关报错/日志**：无。
+
+### 电脑只识别烧录串口，识别不到 USB JTAG/Serial Debug Unit
+- **客户问题/现象**：设备管理器只有 CH343 烧录 COM 口，没有 P4 内置 JTAG 通道。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：CH343 对应 `USB_TO_UART`；原生 USB-JTAG 应从 `USB1` 枚举，两者不是同一路。
+- **回复内容（解决方法）**：只接 `USB1`，换已验证的数据线；按住 BOOT、短按 RST 后松开 BOOT，再查 `USB\\VID_303A*`。无枚举则排查线材、USB 口和 D+/D-；有黄色感叹号则安装 Espressif 驱动；仅 CDC 无 JTAG 时检查 `DIS_USB_JTAG` eFuse。正常固件占用 GPIO24/25、关闭 USB Serial/JTAG 或进入休眠，也会使设备消失。
+- **相关报错/日志**：`Get-PnpDevice -PresentOnly | Where-Object InstanceId -like 'USB\\VID_303A*'`。
+
+### 每次复位都进入 ROM 下载模式
+- **客户问题/现象**：板子没有正常启动日志，复位后一直停在下载模式。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：复位瞬间 GPIO35/BOOT 被拉低，可能是 BOOT 键卡住、GPIO35 短路或串口工具持续控制 DTR/RTS。
+- **回复内容（解决方法）**：关闭串口监视器和烧录工具；断电重上电，不按 BOOT，只按一次 RST；关闭串口软件的 DTR/RTS 自动控制。仍复现时断电检查 BOOT 键、GPIO35 对地短路，并只用非 UART USB 口供电测试。完全断开 UART 后仍为低电平则建议返修。
+- **相关报错/日志**：`boot:0x307 (DOWNLOAD(USB/UART0/SPI))`。
+
+### 以太网 PHY 芯片型号
+- **客户问题/现象**：询问板载网口 PHY 型号和速率。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：硬件规格确认。
+- **回复内容（解决方法）**：板载 PHY 为 `IP101GRI`，通过 RMII 连接 ESP32-P4，支持 10/100 Mbps 以太网。
+- **相关报错/日志**：无。
+
+### 3.5 mm 耳机口是单声道吗，插座型号是什么
+- **客户问题/现象**：询问耳机口声道数、是否为 PJ320，以及在哪里查。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：板载 ES8311 只有一路 DAC；原理图 J1 标注为 `PJ-393，8 脚贴片`。
+- **回复内容（解决方法）**：耳机口为单声道，左右耳播放相同声音，不支持独立立体声。采购替换件应按 PJ-393 的 8 脚封装、引脚定义及插入检测脚选型，不能仅凭 3.5 mm 外形替换为 PJ320；可在官方原理图第 1 页 J1 位置核对。
+- **相关报错/日志**：无。
+
+### J11、J1 音频路径和软件调音量
+- **客户问题/现象**：询问喇叭接口、耳机接口、功率和音量调节关系。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：音频路径为 P4 I2S → ES8311；J1 为未经过功率放大的耳机输出，J11 经 NS4150B 功放驱动喇叭。
+- **回复内容（解决方法）**：J11 接喇叭，8Ω 下实际输出不应简单按“3W”理解；J1 接耳机或外部功放输入。通过 I2C 配置 ES8311 音量会同时影响输出；GPIO53主要负责功放使能。插入耳机时按原理图会关闭喇叭功放。
+- **相关报错/日志**：无。
+
+### GPIO26、48、53、47 能否采集或输出模拟信号
+- **客户问题/现象**：想将四个 GPIO 用作模拟输入，或重映射为 I2S 后输出模拟音频。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：只有 GPIO53 支持 ADC2_CH4，但它还连接板载功放控制；P4 无内置 DAC。I2S 引脚输出的是数字音频。
+- **回复内容（解决方法）**：采集外部模拟电压时只有 GPIO53具备 ADC 能力，但应先处理功放控制占用；其他三脚不支持 ADC。若输出模拟音频，应使用“GPIO I2S → 外接 I2S DAC”，或直接使用板载 ES8311 与耳机口，不要把 I2S 数字信号当模拟信号。
+- **相关报错/日志**：无。
+
+### 用外置麦克风替代板载麦克风，R69/R70 是否为切换电阻
+- **客户问题/现象**：想把 `MIC_P/MIC_N` 接到其他设备或用外置麦克风替换板载麦克风；怀疑 R69/R70 是麦克风切换。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：R69/R70 属于 J1 耳机/DAC 输出网络，与麦克风输入无直连；板载 MIC1 输出经 L8（0Ω）进入 MIC_P。
+- **回复内容（解决方法）**：仅高阻采集板载麦克风时保持原位并避免外部 MICBIAS 反灌。替换板载麦克风时断电拆除 L8以隔离 MIC1，再按外置麦克风类型接 MIC_P/MIC_N/AGND；单端模块建议经约 1µF 隔直接 MIC_P，数字 I2S/PDM 麦克风不能接此模拟输入。焊前用万用表核对板次连线。
+- **相关报错/日志**：在 R70 测到与 MIC_P 类似波形时，先关闭 I2S Echo/监听任务；可能是软件数字回环，不是 PCB 直连。
+
+### 视频服务器已联网但网页打不开
+- **客户问题/现象**：换供电后网页无法访问，但日志显示 Wi-Fi 已获取 IP。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：DHCP 地址变化、电脑不在同一热点、端口 80 未启动、浏览器误用 HTTPS，或充电宝供电不稳。
+- **回复内容（解决方法）**：电脑连接同一热点并访问日志中的新地址，例如 `http://10.14.239.147/`；确认后续出现 `Camera web server starts`。用 `ping` 和 `Test-NetConnection <IP> -Port 80` 区分网络与服务器问题，必要时关闭 VPN/代理并先用稳定烧录线供电。
+- **相关报错/日志**：`Missing SDIO MODE TLV; Continue anyway` 在已拿到 IP 时通常不是本故障根因。
+
