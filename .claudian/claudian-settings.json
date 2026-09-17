@@ -267,7 +267,7 @@
       "reasoningSummary": "detailed",
       "environmentVariables": "",
       "environmentHash": "runtime-input:v1:e3c641bba9905ddff5464dc5d4c56339ae4cc171d2a208cc4c541d9b47a978e4",
-      "catalogTimestamp": 1789451401838,
+      "catalogTimestamp": 1789544418549,
       "catalogFingerprint": "2:26860d5ebf6d4487f2b8c9ee6bcbc0593e6f2d7062e522a7df8fe215dc431a18",
       "installationMethodsByHost": {},
       "wslDistroOverridesByHost": {}

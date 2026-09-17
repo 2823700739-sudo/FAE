@@ -26,3 +26,9 @@ tags: [FAE, ESP32, LVGL, Arduino, ESP-IDF]
 - **回复内容（解决方法）**：关闭串口监视器，按住BOOT、短按RST后上传，出现 `Connecting...` 再松开BOOT；重新确认拔插后新增COM，换数据线并直连电脑，必要时将Upload Speed降到115200。设备管理器无新增串口时先处理驱动和线材。
 - **相关报错/日志**：`Failed to connect to ESP32-P4: No serial data received`、`Failed uploading: exit status 2`。
 
+### 工程名称是 ESP32-S3，但构建和烧录目标为 ESP32-P4
+- **客户问题/现象**：`ESP32-S3-CAM-Tracker` 工程编译成功，但烧录命令显示 `--chip esp32p4`，随后连接失败。
+- **涉及产品/型号**：实际板型未确认；ESP32-S3 或 ESP32-P4。
+- **根因**：工程目录名称不能决定目标芯片；当前 build/sdkconfig 已配置为 ESP32-P4。若实际硬件是 S3，则目标芯片配置错误；无论目标是否正确，`No serial data received` 表示 esptool 没收到芯片下载握手。
+- **回复内容（解决方法）**：先查看芯片丝印或产品型号确认主控。若实际为 ESP32-S3，执行 `idf.py set-target esp32s3` 后重新 build/flash，不能继续烧入 P4 固件；若实际为 ESP32-P4，则保留 `esp32p4`。随后按住 BOOT、短按 RST、松开 BOOT进入下载模式，重新确认进入下载模式后出现的 COM 口；关闭占用串口的软件，换数据线并直连电脑。原生 USB 下载时 COM 号可能变化，应使用新出现的端口。
+- **相关报错/日志**：`esptool.py --chip esp32p4`；`A fatal error occurred: Failed to connect to ESP32-P4: No serial data received.`

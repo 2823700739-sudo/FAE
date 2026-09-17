@@ -76,3 +76,9 @@ tags: [FAE, ESP32-P4, USB, 音频, 烧录]
 - **回复内容（解决方法）**：电脑连接同一热点并访问日志中的新地址，例如 `http://10.14.239.147/`；确认后续出现 `Camera web server starts`。用 `ping` 和 `Test-NetConnection <IP> -Port 80` 区分网络与服务器问题，必要时关闭 VPN/代理并先用稳定烧录线供电。
 - **相关报错/日志**：`Missing SDIO MODE TLV; Continue anyway` 在已拿到 IP 时通常不是本故障根因。
 
+### 是否有可直接搭配的双目相机
+- **客户问题/现象**：希望为开发板选择双目相机。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT。
+- **根因**：板上只有一路 2-lane MIPI-CSI，官方例程以单目 OV5647 为主，没有官方验证的 MIPI 双目方案。
+- **回复内容（解决方法）**：需要双目时可评估 OS02G10 Stereo USB Camera (A) 或 AR0144 Stereo USB Camera (A)，基于 ESP-IDF USB UVC Host 自行适配，并先以低分辨率 MJPEG（如 1280×480 或 640×240）验证。IMX219-83 Stereo Camera 为双路 MIPI-CSI 输出，不能直接连接本板。若客户要求即插即用及配套双目算法，应明确回复暂无正式适配方案。
+- **相关报错/日志**：⚠️ 上述 USB 双目相机与该开发板没有现成配套例程，兼容性和帧率需实测。

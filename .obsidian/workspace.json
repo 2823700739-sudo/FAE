@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "FAE/00-FAE知识库索引.md",
+                "file": "FAE/ESP32-P4-POE-ETH.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "00-FAE知识库索引"
+              "title": "ESP32-P4-POE-ETH"
             }
           }
         ]
@@ -224,21 +224,24 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "5e36ef053a3eb35e",
+  "active": "3e0a1641c1eb15c3",
   "lastOpenFiles": [
-    "未命名.base",
     "FAE/00-FAE知识库索引.md",
-    "FAE/ESP32-S3-Touch-LCD-4B.md",
-    "FAE/7-DSI-TOUCH-A.md",
+    "FAE/ESP32-P4-Module.md",
     "FAE/ESP32-S3-RLCD-4.2.md",
+    "FAE/ESP32-S3-Touch-LCD-3.49-EN.md",
+    "FAE/ESP32-S3-Touch-LCD-1.83.md",
+    "FAE/ESP32-S3-Touch-LCD-4B.md",
+    "FAE/ESP32-C5-MINI-KIT.md",
+    "FAE/ESP32-通用问题.md",
+    "FAE/ESP32-C5-Pico.md",
+    "FAE/7-DSI-TOUCH-A.md",
+    "未命名.base",
     "FAE/ESP32-S3-Touch-AMOLED-1.32.md",
     "FAE/ESP32-P4-NANO.md",
     "FAE/ESP32-P4-Pico.md",
     "FAE/ESP32-P4-Module-DEV-KIT.md",
-    "FAE/ESP32-通用问题.md",
     "FAE/ESP32-P4-WIFI6-Touch-LCD-X.md",
-    "FAE/ESP32-S3-Touch-LCD-3.49-EN.md",
-    "FAE/ESP32-S3-Touch-LCD-1.83.md",
     "FAE/ESP32-S3-Touch-AMOLED-1.43.md",
     "FAE/ESP32-P4-WIFI6.md",
     "FAE/ESP32-P4-WIFI6-Touch-LCD-7B.md",
@@ -250,8 +253,6 @@
     "FAE/ESP32-P4-POE-ETH.md",
     "FAE/ESP32-P4-ETH.md",
     "FAE/ESP32-P4-Core-DEV-KIT.md",
-    "FAE/ESP32-P4-通用问题.md",
-    "FAE/ESP32-P4-86-Panel-ETH-2RO.md",
     "新建 文本文档.txt",
     "FAE"
   ]
