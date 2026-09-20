@@ -69,3 +69,17 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - **根因**：SMF5.0CA 是跨接在 `VCC_5V` 与 GND 之间的双向 TVS，用于吸收静电、插拔尖峰和短时浪涌；它不是稳压器，也不负责接口隔离或供电方向控制。
 - **回复内容（解决方法）**：正常 5V 下 TVS 基本不导通，瞬态过压时快速泄放到 GND。若受到浪涌后击穿短路，会把 5V 拉低并触发电源限流。断电后测量 `VCC_5V—GND`，若持续接近 0Ω，可抬起 TVS 一端复测，以区分 TVS 短路和后级短路。万用表二极管挡双向均显示不导通可能是正常现象；击穿和钳位电压应以实际料号规格书为准。
 - **相关报错/日志**：⚠️ 仅凭 5V 起不来不能直接判定 TVS 损坏，需隔离器件后复测。
+
+### 能否同时连接声音、DHT11 和电容指纹传感器
+- **客户问题/现象**：希望同时连接 Sound Sensor、DHT11 Temperature-Humidity Sensor 和 Capacitive Fingerprint Reader。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、Sound Sensor、DHT11、Capacitive Fingerprint Reader。
+- **根因**：三类模块分别使用 ADC/GPIO、单总线 GPIO 和 UART，开发板的 GPIO 与外设控制器资源足够；但目前没有针对这三款模块的板级即插即用示例。
+- **回复内容（解决方法）**：三款模块均建议使用 3.3V 供电并与开发板共地。Sound Sensor 的 AOUT 可接 GPIO20（ADC1_CH4）读取相对声音强弱，DOUT 可选接空闲 GPIO；它不能直接测得准确分贝值。DHT11 数据脚可接 GPIO4，读取间隔建议不少于约 1 秒，并确认数据线上拉。电容指纹模块使用 UART，TX/RX 交叉连接，应映射到 UART1～UART4 的空闲 40Pin GPIO，保留 GPIO37/38 的 UART0 给 CH343P 烧录和日志，避免与板载调试串口冲突；原版指纹模块默认波特率常见为 19200，带 `(B)` 的新版可能为 115200，应按具体型号手册确认。软件上分别使用 ESP-IDF ADC/GPIO、DHT 单总线驱动和 UART 驱动。
+- **相关报错/日志**：🔍 具体 DOUT、DHT11 和指纹 UART 引脚应结合当前硬件版本的 40Pin 占用再次确认；外设若输出 5V 电平，必须增加电平转换。
+
+### 与 ESP32-P4-NANO 相比哪款功能更多、性能更好
+- **客户问题/现象**：客户在 ESP32-P4-Module-DEV-KIT 与 ESP32-P4-NANO 之间选型，询问功能和性能差异。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、ESP32-P4-NANO。
+- **根因**：两款采用相近的 ESP32-P4、32MB PSRAM、16MB Flash 与 ESP32-C6 无线方案，核心计算和图像处理性能基本相同；主要差别在板级接口数量、体积和扩展便利性。
+- **回复内容（解决方法）**：需要更多 USB 和扩展接口时优先 Module-DEV-KIT：提供 4 个 Type-A（1 个直连、3 个经 CH334 HUB）、40Pin、独立 I2C/I3C、C6 UART 与 5V 接口，适合多外设和综合开发。需要更紧凑、成本更敏感且单个 USB 已足够时选择 NANO。两者的百兆网、PoE 扩展、TF、MIPI-DSI/CSI 和无线能力相近，不能把接口更多表述为主控性能更强。
+- **相关报错/日志**：无。

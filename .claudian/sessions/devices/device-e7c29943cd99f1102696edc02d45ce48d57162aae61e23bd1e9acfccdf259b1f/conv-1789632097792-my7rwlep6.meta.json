@@ -1,0 +1,27 @@
+{
+  "id": "conv-1789632097792-my7rwlep6",
+  "providerId": "codex",
+  "title": "按产品系列和型号分类知识库索引",
+  "titleGenerationStatus": "success",
+  "createdAt": 1789632097800,
+  "lastActivityAt": 1789643944433,
+  "sessionId": "01a0ae62-b080-7c21-8c29-82811f512009",
+  "selectedModel": "gpt-5.6-sol",
+  "providerState": {
+    "threadId": "01a0ae62-b080-7c21-8c29-82811f512009",
+    "nativeConversationContextEstablished": true,
+    "sessionFilePath": "C:\\Users\\admin\\.codex\\sessions\\2026\\09\\17\\rollout-2026-09-17T16-01-38-01a0ae62-b080-7c21-8c29-82811f512009.jsonl",
+    "transcriptRootPath": "C:\\Users\\admin\\.codex\\sessions",
+    "workspaceDependencyToolVersion": 1
+  },
+  "usage": {
+    "inputTokens": 39176,
+    "cacheCreationInputTokens": 0,
+    "cacheReadInputTokens": 38144,
+    "contextWindow": 258400,
+    "contextWindowIsAuthoritative": true,
+    "contextTokens": 39176,
+    "percentage": 15,
+    "model": "gpt-5.6-sol"
+  }
+}

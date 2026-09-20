@@ -8,10 +8,10 @@ tags: [FAE, ESP32-P4, USB, 供电, JTAG]
 # ESP32-P4-WIFI6-Touch-LCD-7
 
 ### USB TO UART 供电时 OTG 口为什么没有 5V
-- **客户问题/现象**：给一个 Type-C 口供电时，只有该口和排针 5V 有电，另一个 OTG 口仍没有电压。
+- **客户问题/现象**：给一个 Type-C 口供电时，只有该口和排针 5V 有电，另一个 OTG 口仍没有电压；进一步询问电池供电时能否使用 OTG Host。
 - **涉及产品/型号**：ESP32-P4-WIFI6-Touch-LCD-7。
-- **根因**：两个 USB 口的 VBUS 不直接并联，USB0_5V、USB1_5V 经 MOS 管接入主 5V 电源轨，并带防反灌设计。
-- **回复内容（解决方法）**：从 USB TO UART 供电时，排针 5V 有电而 OTG VBUS 为 0V 属正常，板子不会把 UART 口的 5V 反向送到 OTG。不要直接把排针 5V 短接到 OTG VBUS，以免连接电脑时反向供电。外设需要供电时使用带独立电源并隔离上行 VBUS 的 Hub/OTG 转接板。若直接从 OTG 输入 5V 后整板仍不启动，再检查 Q3、U11 与具体硬件版本。
+- **根因**：两个 USB 口的 VBUS 不直接并联，USB0_5V、USB1_5V 经 MOS 管进入板内 5V 电源；电池供电路径没有把电池升压后回送到 `VCC_5V` 或 OTG VBUS。
+- **回复内容（解决方法）**：从 USB TO UART 供电时，排针 5V 有电而 OTG VBUS 为 0V 属正常，板子不会把 UART 口的 5V 反向送到 OTG。仅用电池时排针 5V 与 OTG VBUS 同样没有 5V，因此 OTG 口缺少标准 USB Host 应提供的 VBUS，普通 U 盘、摄像头等通常不能启动或枚举。电池状态下需要 USB Host 时，优先使用带独立供电并隔离上行 VBUS 的 Hub；或另设“电池→5V升压→限流高边开关→OTG VBUS”电路并可靠防反灌。不要直接把排针 5V 或升压输出随意并到 Type-C VBUS。若直接从 OTG 输入 5V 后整板仍不启动，再检查 Q3、U11 与具体硬件版本。
 - **相关报错/日志**：此处“GPIO 有 5V”实际指排针 5V 电源脚；普通 GPIO 逻辑电平仍为 3.3V。
 
 ### USB TO UART 和 OTG 口能否直接用作 JTAG

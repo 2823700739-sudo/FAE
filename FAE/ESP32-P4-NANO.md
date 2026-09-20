@@ -27,3 +27,9 @@ tags: [FAE, ESP32-P4, 供电, 摄像头, MIPI-DSI]
 - **回复内容（解决方法）**：不能经板载CSI插座直接使用。理论上可从GPIO自定义DVP接线，但需约14根信号、自制转接板、完整GPIO配置和ESP-IDF驱动开发；若追求快速稳定，使用树莓派接口OV5647。
 - **相关报错/日志**：⚠️ 本地历史无P4-NANO+OV3660实测案例。
 
+### 能否直连 7inch DSI LCD (C)，触摸和背光是否可用
+- **客户问题/现象**：询问 7inch DSI LCD (C) 能否直插 ESP32-P4-NANO 的 DSI 接口，是否需要转接板，以及触摸和背光能否工作。
+- **涉及产品/型号**：ESP32-P4-NANO、7inch DSI LCD (C)、ESP32-P4 rev v3.x。
+- **根因**：显示链路使用标准 15Pin FFC/DSI，可直接连接；但屏幕还需要独立 5V 供电以及 I2C 来控制触摸和背光。官方 BSP 将该屏标记为测试通过，但明确要求 ESP32-P4 rev v3.0 及以上，rev v1.3 不支持。
+- **回复内容（解决方法）**：断电后用 15Pin FFC 从 NANO 的 DSI 口直连屏幕，无需 DSI 转接板，并核对连接器触点方向。另接 `5V→5V`、`GND→GND`、`SDA→GPIO7`、`SCL→GPIO8`；使用余量充足的 5V 电源。menuconfig 中选择 `Board Support Package (ESP32-P4) → Display → Select LCD type → Waveshare 7inch DSI LCD (C)`，可用 BSP 接口控制背光，触摸采用 GT911 驱动。购买或调试前先通过 esptool/启动日志确认芯片为 rev v3.x，并设置 `CONFIG_ESP_REV_MIN_FULL=300` 或更高。
+- **相关报错/日志**：⚠️ rev v1.3 即使物理接口能插入，官方 BSP 也不支持该屏；屏幕典型电流约为背光开启 500mA、关闭 100mA。

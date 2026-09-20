@@ -1,0 +1,34 @@
+{
+  "schemaVersion": 1,
+  "conversationId": "conv-1789632097792-my7rwlep6",
+  "records": [
+    {
+      "schemaVersion": 1,
+      "id": "msg-1789632098080-aczcxm2",
+      "userTurnOrdinal": 1,
+      "state": "accepted",
+      "localMessageId": "msg-1789632097783-kyfni9r",
+      "timestamp": 1789632097783,
+      "rawDisplayText": "知识库索引按产品名称分下类，分为P4,S3,C5这种，然后再到具体的型号",
+      "canonicalText": "知识库索引按产品名称分下类，分为P4,S3,C5这种，然后再到具体的型号",
+      "images": [],
+      "contentDigest": "c4e3b7a12a59170e374cfc4fd070fa7e30a0f2594aab11d7a496e8cfc2c19eb0",
+      "providerUserMessageId": "01a0ae62-f802-7591-ab5c-1a890d5425b4",
+      "providerAssistantMessageId": "msg_030633d3868db4f1016aab9f283ff887d083bdc26855e11716"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1789643765678-t5z41lk",
+      "userTurnOrdinal": 2,
+      "state": "accepted",
+      "localMessageId": "msg-1789643765671-l8udwtj",
+      "timestamp": 1789643765671,
+      "rawDisplayText": "我想在关系图谱中看到有节点区分而不是全都是散的",
+      "canonicalText": "我想在关系图谱中看到有节点区分而不是全都是散的",
+      "images": [],
+      "contentDigest": "8c45642078c9a2713bddeb61bd677102bb23ddf06ce289895a15bb403e0f0e42",
+      "providerUserMessageId": "01a0af14-b885-7d30-bc59-a8fcdd22866a",
+      "providerAssistantMessageId": "msg_030633d3868db4f1016aabcca4689487d0ad1f6072bdc72d11"
+    }
+  ]
+}

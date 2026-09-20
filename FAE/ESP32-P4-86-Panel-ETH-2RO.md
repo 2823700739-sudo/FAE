@@ -19,3 +19,9 @@ tags: [FAE, ESP32-P4, 工控, 继电器]
 - **回复内容（解决方法）**：硬件可行，历史记录中两路控制脚为GPIO32、GPIO46。需在固件增加语音命令/AI工具调用，或接入Home Assistant/ESPHome。控制市电时核对触点额定，做好保险、绝缘和封闭外壳，先用低压负载测试。
 - **相关报错/日志**：无。
 
+### ESP-Hosted SDIO 通信超时并进入不可恢复状态
+- **客户问题/现象**：P4 与板载 C6 长时间运行后出现 `0x107`、SDIO 写入超时和 `Unrecoverable host sdio state`；之后客户把 C6 改刷为通用 2.12.11 Slave，Wi-Fi 立即不可用。
+- **涉及产品/型号**：ESP32-P4-86-Panel-ETH-2RO、ESP32-P4、ESP32-C6、ESP-Hosted。
+- **根因**：出厂组合已确认是 P4 端 `esp_hosted 2.12.11` 加 C6 Slave FW `0.0.6`，两者版本号含义和编号体系不同，数值不相同不能直接判为不兼容。客户改刷的通用 2.12.11 C6 示例可能改变了 SDIO模式、队列、速率或板级配置，因此“刷后立即无 Wi-Fi”与原先“运行约两天后 SDIO 超时”应分开分析。⚠️ 原始长期运行故障仍可能来自 ESP-Hosted 恢复路径、SDIO 传输或硬件，尚未确诊。
+- **回复内容（解决方法）**：先恢复厂家提供的 C6 出厂 `0.0.6` 二进制文件，并配合原厂 P4 固件复测，不要仅凭版本数字把 C6 升级为 2.12.11。通过 C6 的 3.3V UART、115200 波特率抓上电日志，确认 `ESP-Hosted-MCU Slave FW version :: 0.0.6`；P4 的 2.12.11 从 `dependencies.lock` 核对。提供的 C6 源码目录自身声明为 1.4.7，重新编译后理论上会显示 1.4.7，不能视为出厂 0.0.6 的精确源码快照，因此恢复时优先使用原厂 `.bin`。恢复后若 Wi-Fi 正常，再单独进行 48～72 小时压力测试；仍出现原始超时时，再查 ESP-Hosted 恢复机制、3.3V、C6 EN、SDIO 上拉/焊接和硬件个体。
+- **相关报错/日志**：`ESP_ERR_TIMEOUT (0x107)`、`Unrecoverable host sdio state`、出厂标识 `ESP-Hosted-MCU Slave FW version :: 0.0.6`；C6 源码包 `idf_component.yml` 标记为 `1.4.7`。
