@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "FAE/ESP32-P4-WIFI6-Touch-LCD-7B.md",
+                "file": "FAE/ESP32-P4-86-Panel-ETH-2RO.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "ESP32-P4-WIFI6-Touch-LCD-7B"
+              "title": "ESP32-P4-86-Panel-ETH-2RO"
             }
           }
         ]
@@ -225,29 +225,29 @@
   },
   "active": "3e0a1641c1eb15c3",
   "lastOpenFiles": [
+    "FAE/ESP32-P4-NANO-WIFI6-DB.md",
+    "FAE/ESP32-P4-Module-DEV-KIT.md",
+    "FAE/ESP32-P4-Core-DEV-KIT.md",
+    "FAE/ESP32-P4-Module.md",
+    "FAE/ESP32-P4-通用问题.md",
+    "FAE/ESP32-S3-Touch-AMOLED-1.43C.md",
+    "FAE/ESP32-S3-Touch-LCD-4B.md",
+    "FAE/ESP32-P4-86-Panel-ETH-2RO.md",
+    "FAE/ESP32-P4-WIFI6-Touch-LCD-7B.md",
     "FAE/ESP32-P4-WIFI6-Touch-LCD-7.md",
     "FAE/ESP32-P4-POE-ETH.md",
     "FAE/ESP32-P4-ETH.md",
-    "FAE/ESP32-P4-Module.md",
     "FAE/ESP32-C5-MINI-KIT.md",
     "FAE/ESP32-S3-LCD-3.16.md",
-    "FAE/ESP32-S3-Touch-AMOLED-1.43C.md",
     "FAE/ESP32-S3-Touch-LCD-3.49-EN.md",
-    "FAE/ESP32-S3-Touch-LCD-4B.md",
     "FAE/RPi-FPC-Camera-B.md",
-    "FAE/ESP32-P4-NANO-WIFI6-DB.md",
     "FAE/ESP32-P4-WIFI6-Touch-LCD-3.4C.md",
     "FAE/ESP32-P4-Pico.md",
     "FAE/ESP32-P4-NANO.md",
-    "FAE/ESP32-P4-Core-DEV-KIT.md",
-    "FAE/ESP32-P4-86-Panel-ETH-2RO.md",
     "FAE/ESP32-C5-Pico.md",
     "FAE/ESP32-P4-WIFI6-Touch-LCD-X.md",
     "FAE/ESP32-P4-WIFI6-Touch-LCD-10.1.md",
-    "FAE/ESP32-P4-WIFI6-Touch-LCD-7B.md",
     "FAE/ESP32-P4-WIFI6-Touch-LCD-4B.md",
-    "FAE/ESP32-P4-通用问题.md",
-    "FAE/ESP32-P4-Module-DEV-KIT.md",
     "FAE/ESP32-P4-WIFI6-POE-ETH.md",
     "FAE/ESP32-P4-WIFI6-Touch-LCD-4.3.md",
     "FAE/C5.md",
