@@ -67,3 +67,24 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **根因**：ESP-Hosted 提供 Slave OTA RPC，P4 可经已建立的 SDIO 链路把 C6 应用镜像分块传输并激活；但前提是当前 C6 能正常启动、分区表支持 OTA、固件实现对应 RPC，并且 P4 与 C6 使用兼容的 ESP-Hosted 版本和传输配置。
 - **回复内容（解决方法）**：先从相同 ESP-Hosted 版本的 `slave` 示例编译 ESP32-C6，传输方式选择与板卡一致的 SDIO，得到 `network_adapter.bin` 应用镜像；不要把 P4 固件或随意合并的全量镜像用于 Slave OTA。P4 端使用 `host_performs_slave_ota` 示例，可将 `network_adapter.bin` 放入示例的 LittleFS 固件目录，选择 LittleFS OTA 后编译烧录 P4。P4 启动后依次执行版本查询、`esp_hosted_slave_ota_begin/write/end/activate`，校验成功后重启 C6并重新建立 SDIO。ESP32-P4-WIFI6 的示例 SDIO 引脚为 CMD=GPIO19、CLK=GPIO18、D0～D3=GPIO14～17、C6_RST=GPIO54；其他型号必须按各自原理图核对。该方式不是救砖通道：若 SDIO 无法建立、C6 bootloader/分区表损坏、旧固件不支持 OTA RPC，仍需将 C6 IO9 拉低进入下载模式，使用 3.3V TTL 直接烧录。
 - **相关报错/日志**：成功流程常见 `OTA completed successfully`、`New firmware activated`；失败可能出现 `Version query failed`、`OTA begin failed`、`Failed to initialize ESP-Hosted`。
+
+### 启动到 entry 后反复出现 CHIP_LP_WDT_RESET
+- **客户问题/现象**：ESP32-P4 上电后 ROM 能从 Flash 加载三段数据，但执行到 `entry` 后没有 ESP-IDF bootloader 日志，随后不断以 LP/RTC 看门狗复位。
+- **涉及产品/型号**：ESP32-P4 ECO6/ECO7；截图未明确具体开发板型号。
+- **根因**：ROM 已能读取 Flash 且启动模式为 `SPI_FAST_FLASH_BOOT`，故不是典型下载模式或普通 Brownout。故障发生在二级 bootloader/早期硬件初始化阶段。⚠️ 仅凭日志不能确定根因；优先怀疑旧 bootloader/BSP/ESP-IDF 与较新芯片 revision 不匹配、混用不同构建产物，或 Flash/PSRAM 型号、模式、频率配置不正确。`pmu_param: hp_cali_dbias` 只是最后可见提示，不能直接认定为故障根因。
+- **回复内容（解决方法）**：先备份必要的 NVS/校准数据，整片擦除后用同一次构建生成的 bootloader、分区表和应用完整烧录；使用板卡厂商明确支持当前 ECO/revision 的最新工程和匹配 ESP-IDF，执行 `fullclean` 并重新生成 sdkconfig。随后烧录官方最小 `hello_world`：能运行则重点回查当前工程的 bootloader、组件、Flash与PSRAM配置；仍复位则先降低 Flash/PSRAM 频率或暂时关闭 PSRAM做隔离，并提高 bootloader 日志等级。可临时延长 bootloader WDT 辅助定位，但不能把永久关闭看门狗当作修复。仍失败时提供完整型号、IDF版本、烧录命令和上电起始 30～50 行日志。
+- **相关报错/日志**：`rst:0x10 (CHIP_LP_WDT_RESET)`、`boot:0xf/0x30f (SPI_FAST_FLASH_BOOT)`、`ESP-ROM:esp32p4-eco6-20251011`、`ESP-ROM:esp32p4-eco7-20260109`、`W (25) pmu_param: hp_cali_dbias`、`entry 0x4ffac2c0/0x4ff29ed0`。
+
+### 10_wifistation 能否检测丢包，如何用电脑热点测试
+- **客户问题/现象**：希望用 P4+C6 的 `10_wifistation` 示例复现客户经路由器观察到的丢包，但现场只有电脑热点，并询问如何判断测试结果。
+- **涉及产品/型号**：ESP32-P4 + ESP32-C6、ESP-Hosted/SDIO、`10_wifistation`、Windows热点。
+- **根因**：原示例只验证连接AP、DHCP获取IP、断线事件与有限次数重连，不统计ICMP/UDP丢包、延迟、抖动、吞吐或SDIO内部丢失。电脑热点可替代路由器做IP层测试，但通常无法直接观察802.11空口重传。
+- **回复内容（解决方法）**：先让设备连接电脑热点并记录设备IP；Windows可执行 `ping -n 1000 -l 32 -w 1000 设备IP` 和1400字节大包测试，以“已发送、已接收、丢失、丢失百分比”判断，`<设备IP>`中的尖括号只是占位符，实际命令必须删除。需要更接近数据业务时使用iPerf 2.x的UDP模式分别测上行和下行，记录 `Lost/Total Datagrams`，从1Mbit/s逐步测试5/10/20Mbit/s，并同时记录RSSI、距离、信道、包长和持续时间。若要改程序，可加入 `esp_ping`、断线reason、RSSI采集；应用层精确丢包应使用带递增序号的UDP测试。共享日志前应删除Wi-Fi密码。
+- **相关报错/日志**：PowerShell把 `<192.168.x.x>` 解析为运算符时会报“`<`运算符是为将来使用而保留的”；出现“请求超时”或最终统计的丢失数大于0才表示Ping丢包，延迟从20ms波动到300ms属于抖动而非丢包。
+
+### 如何编译 ESP32-C6 ESP-Hosted 0.0.6 固件
+- **客户问题/现象**：客户希望从提供的源码包编译C6 Hosted 0.0.6，并询问实际工程目录和入口源码。
+- **涉及产品/型号**：ESP32-C6、ESP-Hosted 0.0.6、ESP-IDF 5.3.x。
+- **根因**：提供的 `esp-hosted-mcu-release-0.1` 源码包在 `idf_component.yml` 中声明的实际版本是1.4.7；文档中的0.0.6只是开发板出厂预烧录版本说明。仅修改版本字符串不能得到真正的0.0.6。
+- **回复内容（解决方法）**：需要精确0.0.6时，用ESP-IDF 5.3.x执行 `idf.py create-project-from-example "espressif/esp_hosted^0.0.6:slave"`，进入生成的 `slave` 工程，`idf.py set-target esp32c6`，在Example Configuration中选择SDIO传输后编译。主要产物包括 `network_adapter.bin`、bootloader、partition-table和ota_data_initial；P4端与C6端应固定匹配的Hosted版本。原附件中可编译工程目录是 `slave`，入口为 `slave/main/app_main.c`，但编译结果属于1.4.7而不是0.0.6。ESP-IDF 5.5.x对旧0.0.6可能因组件拆分和API变化编译失败，不应强行混用。
+- **相关报错/日志**：正确固定版构建会显示 `Building ESP-Hosted-MCU FW :: 0.0.6`；附件元数据版本为 `1.4.7`。

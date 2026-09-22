@@ -35,6 +35,20 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - **回复内容（解决方法）**：正常架构为 `P4 esp_hosted + esp_wifi_remote ⇄ SDIO ⇄ C6 ESP-Hosted Slave/network_adapter`。C6 出厂通常已烧好，不应烧普通 ESP-AT；否则 P4 端 Hosted API 无法通信。只有恢复或升级时才通过 C6 UART 烧录与 P4 端版本匹配的 Slave 固件。
 - **相关报错/日志**：无。
 
+### PCB 是几层板
+- **客户问题/现象**：询问 ESP32-P4-Module-DEV-KIT 的 PCB 层数。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT。
+- **根因**：微雪公开原理图、工程图和结构文件没有标注 PCB 叠层，也未提供可据此确认层数的 PCB 源文件；乐鑫对 ESP32-P4 的布局设计要求是至少使用四层 PCB。
+- **回复内容（解决方法）**：可以确认该板至少为四层设计，但公开资料不足以确认实际恰好四层还是更多层。对外应回复“至少四层，具体层数需向微雪硬件或生产资料确认”，不能直接承诺为四层板。
+- **相关报错/日志**：🔍 实际层数和叠层结构未在公开资料中披露。
+
+### 如何通过板载 C6 实现 BLE，需要哪些组件
+- **客户问题/现象**：客户发现 P4 没有现成蓝牙例程，询问蓝牙位于 C6 时，P4 工程需要使用哪些组件。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、ESP32-P4、ESP32-C6、ESP-Hosted、NimBLE。
+- **根因**：ESP32-P4 本身没有蓝牙射频；蓝牙 Controller 运行在板载 C6，P4 运行 NimBLE Host 和业务逻辑，两者通过 SDIO 上的 ESP-Hosted HCI/VHCI 通道通信。仅在 P4 端添加组件、但不更新匹配的 C6 协处理器固件，无法建立完整 BLE 链路。
+- **回复内容（解决方法）**：P4 端主要使用 `espressif/esp_hosted` 和 ESP-IDF 内置 NimBLE；只有同时使用 Wi-Fi 或 Wi-Fi/BLE 共存时才需要 `espressif/esp_wifi_remote`。C6 端必须烧录与 P4 端 Hosted 版本匹配、启用 Bluetooth Controller 与 VHCI 的协处理器固件。可参考 Espressif `bluetooth/esp_hosted_nimble/bleprph_gatt` 的 P4 Host/C6 CP 成套示例；不要把普通 C6 `bleprph` 原样当作 P4 工程，也不要单独升级一端的 Hosted 组件。当前微雪仓库没有现成蓝牙例程。C6 只提供 BLE，不支持经典蓝牙 SPP/A2DP。
+- **相关报错/日志**：⚠️ P4 组件与 C6 固件版本必须成套匹配；示例版本和依赖范围可能变化，使用前需核对当前官方组件说明。
+
 ### CH334F 连接 P4 的哪些引脚
 - **客户问题/现象**：询问 CH334F 是否接 GPIO26/27，或接模组 48/49 脚。
 - **涉及产品/型号**：ESP32-P4-Module-DEV-KIT。
