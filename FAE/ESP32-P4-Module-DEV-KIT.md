@@ -97,3 +97,17 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - **根因**：两款采用相近的 ESP32-P4、32MB PSRAM、16MB Flash 与 ESP32-C6 无线方案，核心计算和图像处理性能基本相同；主要差别在板级接口数量、体积和扩展便利性。
 - **回复内容（解决方法）**：需要更多 USB 和扩展接口时优先 Module-DEV-KIT：提供 4 个 Type-A（1 个直连、3 个经 CH334 HUB）、40Pin、独立 I2C/I3C、C6 UART 与 5V 接口，适合多外设和综合开发。需要更紧凑、成本更敏感且单个 USB 已足够时选择 NANO。两者的百兆网、PoE 扩展、TF、MIPI-DSI/CSI 和无线能力相近，不能把接口更多表述为主控性能更强。
 - **相关报错/日志**：无。
+
+### 能否使用 UVC USB 摄像头
+- **客户问题/现象**：询问ESP32-P4-Module-DEV-KIT能否连接USB摄像头。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、USB Host、UVC摄像头、ESP-IDF。
+- **根因**：板卡支持USB Host并具备PSRAM，可运行UVC Host；但摄像头必须符合USB UVC协议，且USB摄像头的吞吐与板载MIPI-CSI摄像头不是同一条链路。
+- **回复内容（解决方法）**：将板载USB跳线切到HOST，把摄像头接入直连P4的1号Type-A口，优先使用ESP-IDF的`peripherals/usb/host/uvc`示例验证。建议先从MJPEG、640×480、15FPS开始并启用PSRAM，Logitech C270/C170等在乐鑫示例中有测试记录。优先选择能直接输出MJPEG的摄像头；高耗电型号应使用稳定电源或自供电Hub。
+- **相关报错/日志**：⚠️ 商品页的1080P@30fps主要针对MIPI-CSI接口，不能直接视为USB摄像头也能达到相同性能；实际分辨率和帧率取决于UVC格式、USB带宽与缓冲配置。
+
+### 能否运行 Linux 并连接 MIPI 屏和功能按键
+- **客户问题/现象**：希望开发板作为Linux平台，连接MIPI屏并通过扩展GPIO接功能开关按键。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、MIPI-DSI、GPIO、Linux、ESP-IDF。
+- **根因**：该板支持在Linux电脑上使用ESP-IDF开发，但微雪现成方案是ESP32-P4运行ESP-IDF/FreeRTOS，不能把“Linux主机可开发”理解为“开发板直接运行Linux系统”。硬件具备2-lane MIPI-DSI和40Pin GPIO，因此屏幕和按键能力与操作系统问题需要分开判断。
+- **回复内容（解决方法）**：若Linux仅指开发电脑，可以在Linux上安装ESP-IDF完成编译和烧录；目标板可连接接口、供电和驱动兼容的MIPI-DSI屏，并用空闲3.3V GPIO接功能按键，配合上下拉和消抖逻辑。板载BOOT/RST用于下载和复位，不建议当普通功能键。若要求目标板直接运行Linux及复用现有Linux应用，则该板不是现成替代方案，应选择树莓派或其他Linux SoM/SBC。
+- **相关报错/日志**：无；🔍 具体屏幕仍需核对lane数、排线脚位、供电、触摸、背光和驱动支持。

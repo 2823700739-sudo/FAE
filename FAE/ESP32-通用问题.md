@@ -19,12 +19,12 @@ tags: [FAE, ESP32, LVGL, Arduino, ESP-IDF]
 - **回复内容（解决方法）**：手动删除项目 `build`，PowerShell执行 `chcp 65001`、设置 `PYTHONUTF8=1`，再 `idf.py set-target esp32s3` 和 `idf.py build`。若仍失败应补充可复制的完整日志。
 - **相关报错/日志**：原始日志缺失。
 
-### Arduino 上传时报 No serial data received
-- **客户问题/现象**：工程编译成功，但上传时无法连接芯片。
-- **涉及产品/型号**：ESP32-P4系列，具体板型未明确。
-- **根因**：芯片未进入下载模式、COM被占用、选错串口、线材或USB口异常；与应用代码内容无关。
-- **回复内容（解决方法）**：关闭串口监视器，按住BOOT、短按RST后上传，出现 `Connecting...` 再松开BOOT；重新确认拔插后新增COM，换数据线并直连电脑，必要时将Upload Speed降到115200。设备管理器无新增串口时先处理驱动和线材。
-- **相关报错/日志**：`Failed to connect to ESP32-P4: No serial data received`、`Failed uploading: exit status 2`。
+### 烧录时报 No serial data received
+- **客户问题/现象**：Arduino或ESP-IDF工程编译成功，但esptool打开串口后一直停在`Connecting...`，没有收到芯片ROM下载器响应。
+- **涉及产品/型号**：ESP32-P4系列；包括开发板及ESP32-P4-Module自制底板，具体板型未明确。
+- **根因**：这是串口握手失败而不是编译失败。常见原因是芯片未进入下载模式、COM被占用或选错、自动复位电路未生效、数据线/USB口异常；原生USB进入下载模式后COM号也可能改变。
+- **回复内容（解决方法）**：关闭所有串口终端，按住BOOT、短按RST/EN并保持BOOT，使用115200开始烧录，检测到芯片信息后再松开；重新拔插确认新增COM，换数据线并直连电脑，确认连接的是下载用USB口。可用`python -m esptool --chip esp32p4 -p COMx -b 115200 chip-id`只测试握手。自制底板或外接TTL还应确认3.3V电平、共地、TTL TX接P4 GPIO38/U0RXD、TTL RX接GPIO37/U0TXD，复位采样时GPIO35/BOOT拉低、GPIO36/BOOT_EN保持高电平且EN有复位脉冲。
+- **相关报错/日志**：`Failed to connect to ESP32-P4: No serial data received`、`Failed uploading: exit status 2`；固件与bootloader已生成时不需要先重新编译或`fullclean`。
 
 ### 工程名称是 ESP32-S3，但构建和烧录目标为 ESP32-P4
 - **客户问题/现象**：`ESP32-S3-CAM-Tracker` 工程编译成功，但烧录命令显示 `--chip esp32p4`，随后连接失败。

@@ -40,12 +40,19 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **回复内容（解决方法）**：同一套业务源码通常可以共用，推荐维护两套构建配置并分别全量编译。使用 ESP-IDF v5.5.3+ 或 v6.0+：v1.x 启用 `CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y`，最低版本通常设 `CONFIG_ESP32P4_REV_MIN_100=y`；v3.x 关闭 pre-v3 选择，按需求设 `CONFIG_ESP32P4_REV_MIN_300=y` 或 `301=y`。切换版本后执行 `idf.py fullclean`，必要时移走旧 `sdkconfig` 后重新生成，不能用 `--force` 绕过版本检查。直接访问寄存器、私有 `soc` 头文件、汇编或预编译库的工程需要额外适配；PSRAM、USB、SDMMC、摄像头、显示和休眠功能应分别实机回归。新项目优先确认 v3.1 或更高具体小版本；已有 v1.3 项目可继续维护，但量产应区分 v1/v3 固件。
 - **相关报错/日志**：`chip version mismatch`、`Illegal instruction`、`CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y/n`。
 
-### 烧录切换到 460800 后报 Invalid head of packet
-- **客户问题/现象**：ESP32-P4 已识别且 Stub 已运行，但切换到 460800 波特率后烧录立即失败。
-- **涉及产品/型号**：ESP32-P4 rev v3.1；具体板卡型号未明确。
-- **根因**：握手与 Stub 均成功，问题更符合高速串口链路不稳定，而不是编译失败、芯片型号错误或完全未进入下载模式。常见影响包括 USB 线、HUB、串口占用、供电压降和外接 UART/启动脚干扰。
-- **回复内容（解决方法）**：先改用 `idf.py -p COM12 -b 115200 flash`，成功后可再试 230400；这里降低的是命令中的 `-b`，不是 `--flash_freq`。仍失败时依次更换短的数据线、直连电脑 USB、关闭串口监视器、断开 UART0/启动脚外设、确认供电稳定，并按 BOOT/RESET 流程重新进入下载模式。同环境换板后仍稳定复现，才进一步判断板卡硬件。
-- **相关报错/日志**：`Changing baud rate to 460800`、`Invalid head of packet (0x20): Possible serial noise or corruption.`。
+### Stub 运行后报 Invalid head of packet
+- **客户问题/现象**：ESP32-P4已识别且Stub已上传运行，但在切换到460800后立即失败，或使用esptool 4.12.0在115200下启动新版Stub后报包头错误。
+- **涉及产品/型号**：ESP32-P4 rev v3.1、ESP-IDF 5.5.5、esptool 4.12.0；具体板卡型号未明确。
+- **根因**：ROM握手和Stub上传已经成功，故不是编译、分区或完全未进入下载模式；问题集中在Stub启动后的通信阶段。高速场景优先考虑USB/串口链路、供电或复位干扰；esptool 4.12.0场景还需排查新版flasher stub兼容性。错误字节如`0x20`、`0xA4`只表示收到非法包头，本身不能定位具体器件。
+- **回复内容（解决方法）**：先以`idf.py -p COMx -b 115200 flash`重试，关闭串口监视器、直连电脑USB、换短数据线、断开影响UART0/BOOT/RESET或供电的外设，并手动按BOOT/RESET进入下载模式。esptool 4.12.0可临时设置`$env:ESPTOOL_STUB_VERSION = "1"`切回旧版Stub测试，完成后执行`Remove-Item Env:ESPTOOL_STUB_VERSION`；也可在`Serial flasher config`中临时启用`Disable download stub`做隔离。切换/禁用Stub后成功说明问题集中在Stub路径；仍随机报错则继续排查线材、接口、驱动、供电和板卡硬件。
+- **相关报错/日志**：`Changing baud rate to 460800`、`Using the new stub flasher`、`Uploading stub...`、`Running stub...`、`Invalid head of packet (0x20/0xA4): Possible serial noise or corruption.`；Bootloader仅剩3%或应用分区剩15%不是本次失败原因。
+
+### Wi-Fi 重复注册 netif 导致 lwIP 断言崩溃
+- **客户问题/现象**：ESP32-P4平台启动时先出现摄像头I2C NACK，随后Wi-Fi初始化触发`netif already added`并崩溃。
+- **涉及产品/型号**：ESP32-P4、ESP-Hosted/ESP WiFi Remote、lwIP、OV5647；具体板卡型号未明确。
+- **根因**：致命问题是同一个STA网络接口被重复加入lwIP，常见于ESP-Hosted/WiFi Remote已创建netif后，应用再次调用`esp_netif_create_default_wifi_sta()`或`esp_netif_new()`，或Wi-Fi重启时旧netif未销毁。前面的摄像头I2C NACK和OV5647 ID读取失败是另一条独立故障，不是本次崩溃的直接原因。
+- **回复内容（解决方法）**：搜索`esp_netif_create_default_wifi_sta()`、`esp_netif_new()`、`esp_wifi_start()`及Wi-Fi设置页、ESP-Hosted回调，保证STA netif只创建一次，并给初始化函数增加状态保护；重启Wi-Fi前按组件要求停止并销毁旧接口。摄像头问题另行断电检查排线方向、接触、供电、复位和实际传感器型号，不能用修复netif的方法处理。
+- **相关报错/日志**：`netif already added`、lwIP assert；`I2C unexpected nack`、OV5647读取ID失败。`BOYA flash generic driver`、`swap_xy is not supported`及GPIO冲突警告不是最终崩溃点。
 
 ### 板载 C6 的 IO9 为何要在上电前短接 GND，何时拆除
 - **客户问题/现象**：询问短接 IO9 与 GND 的作用；认为断电时 IO9 已是低电平，并询问识别到串口后能否拆线。
@@ -88,3 +95,10 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **根因**：提供的 `esp-hosted-mcu-release-0.1` 源码包在 `idf_component.yml` 中声明的实际版本是1.4.7；文档中的0.0.6只是开发板出厂预烧录版本说明。仅修改版本字符串不能得到真正的0.0.6。
 - **回复内容（解决方法）**：需要精确0.0.6时，用ESP-IDF 5.3.x执行 `idf.py create-project-from-example "espressif/esp_hosted^0.0.6:slave"`，进入生成的 `slave` 工程，`idf.py set-target esp32c6`，在Example Configuration中选择SDIO传输后编译。主要产物包括 `network_adapter.bin`、bootloader、partition-table和ota_data_initial；P4端与C6端应固定匹配的Hosted版本。原附件中可编译工程目录是 `slave`，入口为 `slave/main/app_main.c`，但编译结果属于1.4.7而不是0.0.6。ESP-IDF 5.5.x对旧0.0.6可能因组件拆分和API变化编译失败，不应强行混用。
 - **相关报错/日志**：正确固定版构建会显示 `Building ESP-Hosted-MCU FW :: 0.0.6`；附件元数据版本为 `1.4.7`。
+
+### 运行内存有多大，是否支持 Modbus
+- **客户问题/现象**：询问ESP32的最大运行内存，以及ESP32-P4平台能否进行Modbus通讯。
+- **涉及产品/型号**：ESP32-P4、ESP32-P4-NANO、ESP-Modbus、Modbus TCP、Modbus RTU。
+- **根因**：ESP32是系列名称，没有统一的运行内存数值；片上SRAM、外部PSRAM与Flash用途不同。以ESP32-P4-NANO为例，P4具有768KB高性能片上内存，板卡另配32MB PSRAM，16MB Flash是非易失存储而不是运行内存。Modbus属于软件协议能力，可通过网络或串口实现。
+- **回复内容（解决方法）**：ESP32-P4可使用乐鑫ESP-Modbus：通过板载以太网或无线网络实现Modbus TCP；使用UART并外接RS485收发器实现Modbus RTU主站或从站。选型时根据显示缓冲、网络栈和业务内存评估实际可用RAM，不能把32MB PSRAM全部等同于低延迟片上内存，也不能把16MB Flash计入运行内存。
+- **相关报错/日志**：无。
