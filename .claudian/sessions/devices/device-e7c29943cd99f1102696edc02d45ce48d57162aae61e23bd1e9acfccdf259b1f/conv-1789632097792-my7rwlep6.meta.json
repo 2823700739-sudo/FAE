@@ -5,15 +5,8 @@
   "titleGenerationStatus": "success",
   "createdAt": 1789632097800,
   "lastActivityAt": 1789643944433,
-  "sessionId": "01a0ae62-b080-7c21-8c29-82811f512009",
+  "sessionId": null,
   "selectedModel": "gpt-5.6-sol",
-  "providerState": {
-    "threadId": "01a0ae62-b080-7c21-8c29-82811f512009",
-    "nativeConversationContextEstablished": true,
-    "sessionFilePath": "C:\\Users\\admin\\.codex\\sessions\\2026\\09\\17\\rollout-2026-09-17T16-01-38-01a0ae62-b080-7c21-8c29-82811f512009.jsonl",
-    "transcriptRootPath": "C:\\Users\\admin\\.codex\\sessions",
-    "workspaceDependencyToolVersion": 1
-  },
   "usage": {
     "inputTokens": 39176,
     "cacheCreationInputTokens": 0,

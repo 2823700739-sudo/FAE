@@ -3,7 +3,7 @@
 tags: [FAE, ESP32-P4, LCD, 摄像头, 音频]
 商品链接: https://www.waveshare.net/shop/ESP32-P4-WIFI6-Touch-LCD-7B.htm
 ---
-
+刷新率54fps
 # ESP32-P4-WIFI6-Touch-LCD-7B
 
 ### 原装摄像头排线太短

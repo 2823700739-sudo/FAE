@@ -2,7 +2,7 @@
 产品: ESP32-P4-WIFI6-Touch-LCD-X
 tags: [FAE, ESP32-P4, LCD, 坐标]
 ---
-
+刷新率：60fps
 # ESP32-P4-WIFI6-Touch-LCD-X
 
 ### 屏幕 X 轴和 Y 轴如何判断
