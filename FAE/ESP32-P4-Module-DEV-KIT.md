@@ -111,3 +111,17 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - **根因**：该板支持在Linux电脑上使用ESP-IDF开发，但微雪现成方案是ESP32-P4运行ESP-IDF/FreeRTOS，不能把“Linux主机可开发”理解为“开发板直接运行Linux系统”。硬件具备2-lane MIPI-DSI和40Pin GPIO，因此屏幕和按键能力与操作系统问题需要分开判断。
 - **回复内容（解决方法）**：若Linux仅指开发电脑，可以在Linux上安装ESP-IDF完成编译和烧录；目标板可连接接口、供电和驱动兼容的MIPI-DSI屏，并用空闲3.3V GPIO接功能按键，配合上下拉和消抖逻辑。板载BOOT/RST用于下载和复位，不建议当普通功能键。若要求目标板直接运行Linux及复用现有Linux应用，则该板不是现成替代方案，应选择树莓派或其他Linux SoM/SBC。
 - **相关报错/日志**：无；🔍 具体屏幕仍需核对lane数、排线脚位、供电、触摸、背光和驱动支持。
+
+### C 套装适配哪款 PoE HAT
+- **客户问题/现象**：ESP32-P4-Module-DEV-KIT-C 客户在 PoE HAT (C)（树莓派 3B+/4B）和 PoE HAT (F)（树莓派 5/CM5）之间选型，询问是否可直接插用。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT-C、PoE HAT (C)、PoE HAT (F)。
+- **根因**：开发板官方文档确认预留 PoE 扩展接口，但未明确列出适配 HAT 料号；商品图中出现 F 型不能代替机械、电气和供电实装验证。C/F 对树莓派的适配声明也不能直接推导出对 ESP32 板的兼容性。
+- **回复内容（解决方法）**：⚠️ 不要仅按商品图下单。以开发板 SKU 30844 向微雪确认 F 型能否直插、PoE 四针与 40Pin 相对位置及 C 套装 10.1 英寸屏的总供电预算；C 型也需单独确认，不可因树莓派 3B+/4B 兼容而推定兼容本板。若最终使用 F 型，按其规格准备 802.3at PoE+ 设备；标称 5V/4.5A 是模块输出上限，由主板和外设共同分配。[开发板文档](https://docs.waveshare.com/ESP32-P4-Module-DEV-KIT)、[PoE HAT (F) 产品页](https://www.waveshare.com/product/raspberry-pi/hats/interface-power/poe-hat-f.htm)。
+- **相关报错/日志**：🔍 尚无 C/F 与该板的实装验证记录，待厂商确认。
+
+### 整板需要多大输入电压和电流
+- **客户问题/现象**：询问 ESP32-P4-Module-DEV-KIT 可接受的电源电压、电流和接线入口。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT。
+- **根因**：该板公共输入轨为 5V；原理图 `3A MAX` 指 U4 的 3.3V 降压输出能力，不是整板输入电流定额或排针输出定额。
+- **回复内容（解决方法）**：提供稳定 5V 直流电源，普通使用可先选 5V/2A，连屏幕、摄像头、USB 外设或扬声器时可选 5V/3A 并按实际峰值复核。可从两个 Type-C 或 H5-2（5V）/H5-1（GND）、P6-1（5V）/P6-3（GND）输入；P6-2 是 3.3V，严禁输入 5V。5V/3A 电源只表示可用能力，板子按负载取电。外部 5V 和有供电的 USB 不建议直接并接；DSI 屏还需按屏幕方案单独核对供电。[原理图](https://files.waveshare.com/wiki/ESP32-P4-Module-DEV-KIT/ESP32-P4-Module-DEV-KIT.pdf)。
+- **相关报错/日志**：⚠️ 官方未公布整板最大输入电流；2A/3A 是选电源建议，不是实测耗电或绝对上限。也见本文件“P6 和 H5 的 5V 引脚能否作为输入或输出”。

@@ -131,3 +131,31 @@ tags: [FAE, ESP32-P4, 供电, WiFi, 摄像头, WebRTC]
 - **根因**：ESP32-P4内部有3个经典CAN/TWAI控制器，但本基础板没有板载CAN物理层收发器；GPIO侧只有TXD/RXD逻辑信号，不能直接连接CANH/CANL。
 - **回复内容（解决方法）**：三路独立CAN总线需要3个支持3.3V逻辑的收发器，可评估CAN0 GPIO30/31、CAN1 GPIO28/29、CAN2 GPIO32/33作为TX/RX；每条总线仅在两个物理末端各放一个120Ω终端电阻。若只是同一条总线连接3个设备，只需1个TWAI控制器和1个收发器，把各设备CANH/CANL并联并共地。P4已有TWAI控制器，一般无需再使用MCP2515；若收发器以5V供电，必须确认有独立3.3V VIO，不能让5V RXD直接进入P4。
 - **相关报错/日志**：🔍 GPIO可经Matrix重映射，上述推荐需结合当前板卡版本及其他外设占用再次核对；ESP32-P4 TWAI为经典CAN 2.0，最高1Mbit/s，不是CAN FD。
+
+### Secure Boot 是否表示芯片锁死或变砖
+- **客户问题/现象**：ESP32-P4-WIFI6出现Secure Boot提示，担心芯片已经锁死并无法恢复。
+- **涉及产品/型号**：ESP32-P4-WIFI6、ESP32-P4、ESP32-C6、Secure Boot v2、eFuse。
+- **根因**：Secure Boot表示芯片只启动与eFuse中公钥摘要匹配的签名固件，不等于物理损坏。若刷入未签名或错误密钥签名的固件，会拒绝启动而表现得像“变砖”；启用`SECURE_BOOT_EN`后通常不可关闭。P4-WIFI6有P4和C6两颗芯片，还需先确认提示来自哪一颗。
+- **回复内容（解决方法）**：先不要擦除Flash、改烧bootloader或执行任何`burn-efuse`操作。按BOOT后复位进入下载模式，运行`esptool --chip esp32p4 -p COMx get-security-info`（旧版为`get_security_info`），检查Secure Boot、Flash Encryption、Secure Download Mode及Download Mode状态。若仍能通信且原签名私钥存在，通常可用匹配密钥重新签名并烧录恢复；私钥丢失且现有固件不能启动，或下载模式也被永久关闭时，才可能实际无法恢复。
+- **相关报错/日志**：⚠️ 仅看到`Secure Boot`提示不足以判断锁死；需提供完整烧录报错和`get-security-info`输出。
+
+### VSYS 外接 5V 时亮灯却无法联网，Type-C 供电正常
+- **客户问题/现象**：客户从 VSYS 输入外接 5V 后电源灯亮但无法连 Wi-Fi；换 Type-C 供电则可正常联网。
+- **涉及产品/型号**：ESP32-P4-WIFI6、VSYS、ESP32-C6、Wi-Fi。
+- **根因**：电源灯亮只证明 5V 到达部分板上网络，不能证明 C6 所需 `ESP_3V3` 在启动和射频峰值期间稳定。外部电源限流、细长线压降、接地不良、C6/Hosted 初始化异常，或程序依赖 Type-C 侧 `VBUS/USB0_5V`，均待区分。
+- **回复内容（解决方法）**：先确认稳压 5V 接 `VSYS`、负极接板上 GND，不要把 5V 接 `3V3` 或 `VBUS`。在 Wi-Fi 扫描/连接时测板端 `VSYS-GND` 与 `3V3-GND`，并与 Type-C 正常时对照，最好用示波器抓瞬态；有压降则换有余量电源和短粗线。保持同一固件/网络，先验证普通充电器经 Type-C 供电也可联网，再用独立串口仅接信号和 GND 抓外供时 P4、C6 启动及 Hosted 日志，避免调试线暗中补电。电压稳定时再查 C6 启动、SDIO 与 Wi-Fi 关联错误及程序是否以 `VBUS` 为条件。不要直接短接 `VSYS` 与 `VBUS`。[本型号原理图](https://files.waveshare.com/wiki/ESP32-P4-WIFI6/ESP32-P4-WIFI6-datasheet.pdf)。
+- **相关报错/日志**：⚠️ 尚无两种供电方式下的 VSYS/3V3 实测和完整启动日志，不能仅凭亮灯判定主板故障。
+
+### UVC 摄像头在 P4 热复位后不能重新出流
+- **客户问题/现象**：UVC USB 摄像头传输视频流时 P4 热复位，重启后重新初始化摄像头仍无视频；追问是否需要像 OV5647 那样做 SCCB 停流与软复位，以及 USB 口供电能否软件关断。
+- **涉及产品/型号**：ESP32-P4-WIFI6、UVC USB 摄像头、USB Host。
+- **根因**：P4 热复位不一定使 USB 摄像头断电，设备可能保留旧状态或未重新枚举。UVC 与 MIPI-CSI/OV5647 的复位机制不同；本板 4Pin USB VBUS 直接接 `VCC_5V`，未见 GPIO 可控的独立 VBUS 电源开关。
+- **回复内容（解决方法）**：有意重启前先停止 UVC 流、关闭设备；P4 重启后完整初始化 USB Host/UVC 驱动并等待设备重新枚举，再启动流。不要向 UVC 摄像头执行 OV5647 的 SCCB 寄存器复位序列。若设备仍无法枚举，应增加外置 GPIO 控制的限流高边电源开关或带端口断电功能的 USB Hub，对摄像头 VBUS 真正断电再上电；软件不能直接关掉原板共用的 `VCC_5V`。抓 USB 枚举与 UVC 日志，区分“未枚举”和“已枚举但无帧”。[本型号原理图](https://files.waveshare.com/wiki/ESP32-P4-WIFI6/ESP32-P4-WIFI6-datasheet.pdf)。
+- **相关报错/日志**：⚠️ 目前属于基于供电与 USB 状态的排查方案，尚无客户枚举日志证实具体根因。
+
+### GPIO47/48 输出高电平只有约 1.2V
+- **客户问题/现象**：GPIO47/48 配为高电平却只量到约 1.2V；客户要求最小测试工程和 `ESP_LDO_VO4` 的测点，随后反馈测试程序运行现象正常。
+- **涉及产品/型号**：ESP32-P4-WIFI6、GPIO47/48、LDO4、VDD_IO_5。
+- **根因**：GPIO39～48 输出级由 `VDDPST_5/VDD_IO_5` 供电，本板接内部 LDO4 输出 `ESP_LDO_VO4`。未正确开启/设置 LDO4、同域负载或硬件异常都可能使高电平偏低；`gpio_set_level(1)` 本身不负责把域电压变为 3.3V。
+- **回复内容（解决方法）**：先取下 MicroSD、断开外设，测试程序阶段 A 仅将 GPIO47/48 置高，阶段 B 调用 `esp_ldo_acquire_channel()`，设 `.chan_id=4`、`.voltage_mv=3300` 并保持句柄有效，再测两 GPIO。`ESP_LDO_VO4` 可在 C32（或 C31）非接地端测量：断电时先用通断档识别接地端，上电后黑表笔接 GND、红表笔小心接另一端；对比两阶段的 VO4 和 GPIO。A≈1.2V、B≈3.3V 指向初始化问题；VO4 始终低则查 LDO 配置/负载/短路；VO4≈3.3V 而 GPIO 低则查复用或外部负载。客户已反馈测试代码现象正常，说明所测板可通过正确开启 LDO4 达到预期；但原工程具体缺失处仍需代码对照。项目示例见 `ESP32-P4-WIFI6-LDO4-GPIO-Test`，通用机制也见 [[ESP32-P4-Pico#GPIO47/48 拉高后仅约 1.2 V]]。
+- **相关报错/日志**：客户反馈“测试代码运行现象没有问题”，未提供具体 VO4/GPIO 数值；⚠️ 勿将 3.3V 从外部硬灌 GPIO，通断档仅可在断电时使用。

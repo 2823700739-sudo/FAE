@@ -41,11 +41,11 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **相关报错/日志**：`chip version mismatch`、`Illegal instruction`、`CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y/n`。
 
 ### Stub 运行后报 Invalid head of packet
-- **客户问题/现象**：ESP32-P4已识别且Stub已上传运行，但在切换到460800后立即失败，或使用esptool 4.12.0在115200下启动新版Stub后报包头错误。
-- **涉及产品/型号**：ESP32-P4 rev v3.1、ESP-IDF 5.5.5、esptool 4.12.0；具体板卡型号未明确。
-- **根因**：ROM握手和Stub上传已经成功，故不是编译、分区或完全未进入下载模式；问题集中在Stub启动后的通信阶段。高速场景优先考虑USB/串口链路、供电或复位干扰；esptool 4.12.0场景还需排查新版flasher stub兼容性。错误字节如`0x20`、`0xA4`只表示收到非法包头，本身不能定位具体器件。
-- **回复内容（解决方法）**：先以`idf.py -p COMx -b 115200 flash`重试，关闭串口监视器、直连电脑USB、换短数据线、断开影响UART0/BOOT/RESET或供电的外设，并手动按BOOT/RESET进入下载模式。esptool 4.12.0可临时设置`$env:ESPTOOL_STUB_VERSION = "1"`切回旧版Stub测试，完成后执行`Remove-Item Env:ESPTOOL_STUB_VERSION`；也可在`Serial flasher config`中临时启用`Disable download stub`做隔离。切换/禁用Stub后成功说明问题集中在Stub路径；仍随机报错则继续排查线材、接口、驱动、供电和板卡硬件。
-- **相关报错/日志**：`Changing baud rate to 460800`、`Using the new stub flasher`、`Uploading stub...`、`Running stub...`、`Invalid head of packet (0x20/0xA4): Possible serial noise or corruption.`；Bootloader仅剩3%或应用分区剩15%不是本次失败原因。
+- **客户问题/现象**：ESP32-P4已识别且Stub已上传运行，但在切换到460800后、启动新版Stub后，或Stub读取/验证Flash信息时立即报非法包头。
+- **涉及产品/型号**：ESP32-P4 rev v3.1/v3.2、ESP-IDF 5.5.5、esptool 4.10.0/4.12.0；具体板卡型号未明确。
+- **根因**：ROM握手和Stub上传已经成功，故不是编译、分区或完全未进入下载模式；问题集中在Stub启动后的通信或Flash信息读取阶段。高速场景优先考虑USB/串口链路、供电或复位干扰；不同esptool版本还需排查Stub路径兼容性。`0x20`、`0x50`、`0xA4`等只是收到的非法包头字节，不是Flash芯片错误码，也不能单独证明Flash损坏。
+- **回复内容（解决方法）**：先用`idf.py -p COMx -b 115200 flash`重试，关闭串口监视器、直连电脑USB、换短数据线、断开影响UART0/BOOT/RESET或供电的外设，并手动按BOOT/RESET进入下载模式。esptool 4.12.0可临时设置`$env:ESPTOOL_STUB_VERSION = "1"`切回旧版Stub；也可在build目录用`python -m esptool --chip esp32p4 -p COMx -b 115200 --before default_reset --after hard_reset --no-stub write_flash "@flash_args"`做ROM loader隔离测试。`--no-stub`成功时优先怀疑Stub路径或USB通信；两种方式均随机出现不同`0xXX`时继续查线材、接口、驱动、供电和复位；每次稳定同点失败再核对Flash配置和板卡硬件。不要仅为此先改分区表或反复fullclean。
+- **相关报错/日志**：`Changing baud rate to 460800`、`Using the new stub flasher`、`Stub running...`、`Unable to verify flash chip connection`、`Invalid head of packet (0x20/0x50/0xA4): Possible serial noise or corruption.`；应用分区仍有余量或Bootloader空间警告不是本次通信错误原因。
 
 ### Wi-Fi 重复注册 netif 导致 lwIP 断言崩溃
 - **客户问题/现象**：ESP32-P4平台启动时先出现摄像头I2C NACK，随后Wi-Fi初始化触发`netif already added`并崩溃。

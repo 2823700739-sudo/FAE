@@ -75,3 +75,10 @@ tags: [FAE, ESP32-P4, OTA, ESP32-C6, 固件, 视频]
 - **根因**：OTG Type-C的`USB1_5V`经Q3/U11用于“OTG口向板内供电”，不会把板内VCC_5V反向送回OTG；CC1/CC2又采用5.1kΩ下拉，表现为受电端。仅靠软件无法开启5V VBUS，直接短接VCC_5V与USB1_5V还会带来反灌和多电源争流风险。
 - **回复内容（解决方法）**：优先使用真正自供电的扫码枪或外部供电OTG Y线：开发板只连接D+/D-/GND并与扫码枪共地，开发板OTG的VBUS断开或隔离；若扫码枪仍需检测VBUS，则仅在扫码枪侧提供5V，并通过反向阻断高边开关与开发板隔离。板级改造时可从稳定VCC_5V或独立5V经保险/限流、过流短路保护及反向阻断开关送到接口板J1-1/H1 VBUS，端口附近加去耦，数据线保持不变；仅电池供电时还需电池到5V升压。先空载测约5V，再以约500mA验证不低于4.75V，最后测试扫码枪枚举；HID模式用USB HID Host，CDC模式需CDC-ACM Host驱动。
 - **相关报错/日志**：⚠️ 不要直接短接`VCC_5V`与`USB1_5V`，不要并联OTG外部5V、UART口5V和其他5V源；部分自供电扫码枪仍需要VBUS存在才会枚举。
+
+### 如何作为 Windows 电脑的扩展屏
+- **客户问题/现象**：希望将 ESP32-P4-WIFI6-Touch-LCD-10.1 作为现有电脑屏幕的扩展副屏。
+- **涉及产品/型号**：ESP32-P4-WIFI6-Touch-LCD-10.1、USB OTG、Windows 10/11。
+- **根因**：本板为 ESP32-P4 驱动的 MIPI-DSI 屏，未提供 HDMI/DP 视频输入；作为电脑副屏需板端 USB 扩展屏固件与电脑端 Windows IDD 驱动协同，图像通过 USB OTG 传输。
+- **回复内容（解决方法）**：使用微雪 ESP32-P4-WIFI6-Touch-LCD-X 仓库的 `examples/esp-idf/12_usb_extend_screen`，在 ESP-IDF 中选择 esp32p4 与 10.1 英寸屏配置后编译、通过 USB TO UART 口烧录；从乐鑫 USB 扩展屏 `windows_driver` 页面下载并安装签名驱动，用支持数据传输的 Type-C 线将板上 USB OTG 口接电脑，在 Windows 显示设置中选择“扩展这些显示器”并排列屏幕位置。不要把出厂固件当作已具备 USB 扩展屏功能，也不要将 HDMI 线或转接头直接接到该板。🔍 10.1 英寸面板原生 800×1280，实际横屏分辨率、旋转和触摸映射需以所用示例版本与实机测试为准；乐鑫通用示例文档提示其 Windows 驱动暂不支持竖屏。
+- **相关报错/日志**：无。参考：https://github.com/waveshareteam/ESP32-P4-WIFI6-Touch-LCD-X 、https://docs.espressif.com/projects/esp-iot-solution/zh_CN/latest/usb/usb_overview/usb_device_solutions.html 、https://github.com/espressif/esp-iot-solution/blob/master/examples/usb/device/usb_extend_screen/windows_driver/README_cn.md 。
