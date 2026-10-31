@@ -238,8 +238,9 @@
       "realclaudian:Open Claudian": false
     }
   },
-  "active": "7e6c08fc888fe54b",
+  "active": "de35250b76f54052",
   "lastOpenFiles": [
+    "FAE/ESP32-S3-PhotoPainter.md",
     "FAE/ESP32-P4-NANO.md",
     "FAE/7-DSI-TOUCH-A.md",
     "FAE/00-FAE知识库索引.md",
@@ -265,7 +266,6 @@
     "FAE/ESP32-C5-Relay-1CH-U.md",
     "FAE/ESP32-S3-RS485-CAN.md",
     "FAE/ESP32-P4-Pico.md",
-    "FAE/ESP32-P4-ETH.md",
     "未命名.base",
     "新建 文本文档.txt",
     "FAE"

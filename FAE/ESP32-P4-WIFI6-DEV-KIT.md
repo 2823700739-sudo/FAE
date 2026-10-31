@@ -11,6 +11,13 @@ tags: [FAE, ESP32-P4, USB, 音频, 烧录]
 
 ## ⚠️ 产品参数 / 规格（优先查看）
 
+### 连接 8.8-DSI-TOUCH-A 所称“4号排线”是什么
+- **客户问题/现象**：原沟通答复该板可以接8.8-DSI-TOUCH-A，使用“4号排线”，希望整理兼容方案。
+- **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT、8.8-DSI-TOUCH-A；屏幕/板卡版本及排线料号未提供。
+- **根因**：🔍 缺原配件图及排线定义；“4号”是上下文编号，不是可独立采购、接线和复现的规格。
+- **回复内容（解决方法）**：保留原沟通“可接/4号排线”为待核实答复，不升级为本次已验证兼容。需补官方适配/BSP配置、准确排线型号/图号、两端针数/间距/触点/针序和供电/触摸要求；按准确硬件断电连接，确认显示与触摸后再标已适配。不能凭同为DSI或编号选线，也不借其他尺寸的配置作保证。
+- **相关报错/日志**：状态：待确认兼容性与可追溯排线规格；无当次源码配置/实板结果。 来源：用户提供的本周支持汇总（2026-10-31入库，原始个案日期未注明）。
+
 ### P4 与板载 C6 如何连接和通信，是否需要另接串口
 - **客户问题/现象**：询问本产品P4和无线芯片之间的连接、通信方式，以及是否需要外接串口/AT固件。
 - **涉及产品/型号**：ESP32-P4-WIFI6-DEV-KIT、ESP32-C6、ESP-Hosted。
@@ -159,6 +166,7 @@ tags: [FAE, ESP32-P4, USB, 音频, 烧录]
 - **根因**：1 号口直连 ESP32-P4，2～4 号口经 CH334 HUB；固件可能未开启 HUB，或 FS/LS 设备触发当前 HS Host 经 HUB 不支持 TT 的限制。
 - **回复内容（解决方法）**：断电后按版本选择数据通路：Rev1.1接DEVICE=1号直连、HOST=2～4号HUB；Rev1.2相反，HOST=1号、DEVICE=2～4号。DEVICE丝印在此表示选择HUB通路，软件仍运行Host，不是改成Device。四口数据不能同时全启用。再启用 `CONFIG_USB_HOST_HUBS_SUPPORTED=y` 并加载设备类驱动。若日志提示 FS/LS Transaction Translator 不支持，暂用 1 号直连接口，支持相应新版栈时可评估fsls_only=true，不能把TT限制泛化为永久不支持。先测VBUS，再查CH334枚举、HID类驱动和设备速度；键盘灯灭不等于无5V，不能直接判定CH334损坏。[官方版本跳线说明](https://docs.waveshare.net/ESP32-P4-WIFI6-DEV-KIT/FAQ/)、[Host限制](https://docs.espressif.com/projects/esp-usb/en/latest/esp32p4/usb_host.html)。
   增量补充（2026-10-31整理）：2026-10-27咨询同一HUB混合FS/HS：当时官方栈未支持TT/Split Transaction，不能保证HS主机经HS HUB同时按各自速率使用FS/HS外设，换外置HUB也不解决栈限制；可用全HS组合，或在支持的栈版本设置fsls_only使总线降速，但不能保留HS。未实板混合测试，按具体组件版本复核。[Host限制](https://docs.espressif.com/projects/esp-usb/en/latest/esp32p4/usb_host.html)。
+  本周支持汇总补充（2026-10-31入库）：周报再次记录同一HUB混用FS/HS时回复“不支持”。该回复仅补作支持记录，沿用本条对当时官方栈TT/Split Transaction的版本限定，不表述为芯片/HUB永久硬件不支持；无新的混合速率实板结果，不新增重复技术结论。
 - **相关报错/日志**：`Connected device is FS, transaction translator (TT) is not supported`；无日志时需补充设备类型与ESP-IDF版本；2026-10-21补充客户Rev1.2反馈，尚未确认最终根因。
 
 ### 电脑只识别烧录串口，识别不到 USB JTAG/Serial Debug Unit

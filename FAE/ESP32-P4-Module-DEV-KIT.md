@@ -210,4 +210,5 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - **回复内容（解决方法）**：断电后确认跳线切到 HUB 通路，启用 `CONFIG_USB_HOST_HUBS_SUPPORTED=y`，查看枚举日志；若是 TT 限制只能暂用直连接口。只有连 CH334 本身都不枚举时，才继续查跳线、供电和硬件。
   跳线选择1号直出或2～4号HUB通路，不能把四插座视为四个可同时独立启用的Host。TT限制的规避与所用Host栈版本有关，新版可能提供强制全速模式，应按版本文档评估，不把旧限制泛化成永久不支持。[官方FAQ](https://docs.waveshare.net/ESP32-P4-Module-DEV-KIT/FAQ/)。
   增量补充（2026-10-31整理）：2026-10-27咨询同一HUB混合FS/HS：当时官方栈未支持TT/Split Transaction，不能保证HS主机经HS HUB同时按各自速率使用FS/HS外设，换外置HUB也不解决栈限制；可用全HS组合，或在支持的栈版本设置fsls_only使总线降速，但不能保留HS。未实板混合测试，按具体组件版本复核。[Host限制](https://docs.espressif.com/projects/esp-usb/en/latest/esp32p4/usb_host.html)。
+  本周支持汇总补充（2026-10-31入库）：周报再次记录同一HUB混用FS/HS时回复“不支持”。该回复仅补作支持记录，沿用本条对当时官方栈TT/Split Transaction的版本限定，不表述为芯片/HUB永久硬件不支持；无新的混合速率实板结果，不新增重复技术结论。
 - **相关报错/日志**：`sdio` 无关；应提供 USB 枚举日志和设备速度。
