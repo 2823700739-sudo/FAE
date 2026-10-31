@@ -6,6 +6,34 @@ tags: [FAE, ESP32-P4, 以太网, 结构尺寸]
 
 # ESP32-P4-NANO-WIFI6-DB
 
+开发框架说明：[[ESP32-通用问题#ESP-IDF 示例没有创建任务也算基于 FreeRTOS 吗]]。
+
+> [!important] ⚠️ 产品参数 / 规格优先
+> 本页已将刷新率、供电/电流/电压、接口数量与类型、芯片/存储、尺寸结构及外设能力等**产品参数类问题集中置顶**。参数可能随硬件版本或批次变化；对外回复前请核对准确型号、PCB/芯片版本及条目中的 ⚠️/🔍 标记。
+
+## ⚠️ 产品参数 / 规格（优先查看）
+
+### P4 与板载 C5 如何连接和通信，是否需要另接串口
+- **客户问题/现象**：询问本产品P4和无线芯片之间的连接、通信方式，以及是否需要外接串口/AT固件。
+- **涉及产品/型号**：ESP32-P4-NANO-WIFI6-DB、ESP32-C5、ESP-Hosted。
+- **根因**：P4本身不带Wi-Fi/Bluetooth射频；本产品的板载ESP32-C5作为无线协处理器，通过SDIO连接P4，软件使用ESP-Hosted；SDIO物理总线与其上的RPC/网络数据不是同一概念。
+- **回复内容（解决方法）**：正常架构为 `P4 应用 → esp_wifi_remote / ESP-Hosted Host ⇄ 板内 SDIO ⇄ ESP32-C5 ESP-Hosted Slave → 无线网络`。SDIO 的 CLK、CMD、DAT 信号已由板内走线连接，使用对应官方固件不需要再用杜邦线把 P4 UART 与 C5 UART 相连。P4 编写业务并经适配层使用 `esp_wifi_init()`、`esp_wifi_set_config()`、`esp_wifi_start()`、`esp_wifi_connect()` 等 API；C5 负责无线射频和从机业务。若启用 BLE，P4 的 Host 与 C5 Controller 还需匹配的 Hosted HCI/VHCI 支持，不能由 Wi-Fi 正常推断 BLE 已开启。若板上引出 C5 UART，通常用于独立烧录/日志维护，并非该产品默认的 Wi-Fi AT 主通道。保持本型号 P4 端依赖、SDIO 配置与 C5 从机固件配套，主从版本号数值不必相同；不要改刷普通 ESP-AT，也不要把 P4 镜像写给 C5。已有兼容从机固件时，日常只更新 P4 应用；仅烧 P4 不会自动更新从机。 本型号文档列出的P4侧信号为CLK=GPIO18、CMD=GPIO19、D0～D3=GPIO14～17、从机RESET=GPIO54；GPIO号属于P4，不是C5同号引脚，按实板版本复核。 支持2.4 GHz / 5 GHz 双频 Wi-Fi 6与BLE，不把Wi-Fi 6等同5 GHz，也不把BLE等同经典蓝牙音频。
+- **相关报错/日志**：🔍 本次为产品资料/软件架构核对，未逐板实测；SDIO具体引脚及下载接口按本型号实板/原理图，不套用其他P4板。[本型号官方资料](https://docs.waveshare.net/ESP32-P4-NANO-WIFI6-DB/)，本次板内连接依据本地 Docs_zh 的 `ESP32-P4-NANO-WIFI6-DB/Product-Overview.md`。核对日期：2026-10-31。
+
+### 能否不启 AP 热点用 SmartConfig 配网
+- **客户问题/现象**：希望手机ESPTouch配网而不打开设备AP。
+- **涉及产品/型号**：ESP32-P4-NANO-WIFI6-DB、ESP32-C5。
+- **根因**：C5支持SmartConfig不等于P4 Hosted现成工程已集成对应API和事件。
+- **回复内容（解决方法）**：可开发ESPTouch/ESPTouch v2，需核对主从固件、Hosted支持和手机/网络条件。按当时配套示例未列专门例程，不承诺出厂直接可用。
+- **相关报错/日志**：⚠️ 2026-10-26资料核对，未实板配网测试。
+
+### 板载 Type-C 能否直接 JTAG，USB 转接线如何选
+- **客户问题/现象**：希望用USB-A到Type-C线直接调试，追问转接线外观。
+- **涉及产品/型号**：ESP32-P4-NANO-WIFI6-DB。
+- **根因**：板载Type-C走USB-UART，内置JTAG的GPIO24/25需另外引出。
+- **回复内容（解决方法）**：用无转换芯片的USB信号转接板/短线：D−→24、D+→25、GND共地，板载Type-C供电时转接VBUS不接；不能用TX/RX USB-TTL线，不能只按线色接。安装驱动，运行openocd -f board/esp32p4-builtin.cfg，观察内核识别/3333端口；退出手动OpenOCD后用VS Code F5，同一固件ELF。优先避免外部四线JTAG所需的eFuse及GPIO34复用变更。
+- **相关报错/日志**：🔍 2026-10-27图纸核对，未实板调试。
+
 ### RJ45 是否为最高器件，结构高度是多少
 - **客户问题/现象**：为外壳限高设计确认板上最高器件和 RJ45 网口高度。
 - **涉及产品/型号**：ESP32-P4-NANO-WIFI6-DB、HBJ-6117ANL。

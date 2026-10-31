@@ -48,54 +48,9 @@
       "customModels": "",
       "discoveredModels": [
         {
-          "model": "gpt-6-astra",
-          "displayName": "GPT-6-Astra",
-          "description": "Our most capable model for complex, demanding work.",
-          "supportedReasoningEfforts": [
-            {
-              "value": "low",
-              "description": "Fast responses with lighter reasoning"
-            },
-            {
-              "value": "medium",
-              "description": "Balances speed and reasoning depth for everyday tasks"
-            },
-            {
-              "value": "high",
-              "description": "Greater reasoning depth for complex problems"
-            },
-            {
-              "value": "xhigh",
-              "description": "Extra high reasoning depth for complex problems"
-            },
-            {
-              "value": "max",
-              "description": "Maximum reasoning depth for the hardest problems"
-            },
-            {
-              "value": "ultra",
-              "description": "Maximum reasoning with automatic task delegation"
-            }
-          ],
-          "defaultReasoningEffort": "low",
-          "serviceTiers": [
-            {
-              "id": "priority",
-              "name": "Fast",
-              "description": "2x speed, increased usage"
-            }
-          ],
-          "defaultServiceTier": null,
-          "inputModalities": [
-            "text",
-            "image"
-          ],
-          "isDefault": true
-        },
-        {
           "model": "gpt-5.6-sol",
           "displayName": "GPT-5.6-Sol",
-          "description": "Reliable agentic workhorse for everyday tasks.",
+          "description": "Older generation workhorse model.",
           "supportedReasoningEfforts": [
             {
               "value": "low",
@@ -135,12 +90,12 @@
             "text",
             "image"
           ],
-          "isDefault": false
+          "isDefault": true
         },
         {
           "model": "gpt-5.6-terra",
           "displayName": "GPT-5.6-Terra",
-          "description": "Balanced agentic coding model for everyday work.",
+          "description": "Older balanced model for straightforward work.",
           "supportedReasoningEfforts": [
             {
               "value": "low",
@@ -185,7 +140,7 @@
         {
           "model": "gpt-5.6-luna",
           "displayName": "GPT-5.6-Luna",
-          "description": "Fast and affordable agentic coding model.",
+          "description": "Older fast and efficient model.",
           "supportedReasoningEfforts": [
             {
               "value": "low",
@@ -222,43 +177,6 @@
             "image"
           ],
           "isDefault": false
-        },
-        {
-          "model": "gpt-5.5",
-          "displayName": "GPT-5.5",
-          "description": "Proven previous-generation model for coding and general work.",
-          "supportedReasoningEfforts": [
-            {
-              "value": "low",
-              "description": "Fast responses with lighter reasoning"
-            },
-            {
-              "value": "medium",
-              "description": "Balances speed and reasoning depth for everyday tasks"
-            },
-            {
-              "value": "high",
-              "description": "Greater reasoning depth for complex problems"
-            },
-            {
-              "value": "xhigh",
-              "description": "Extra high reasoning depth for complex problems"
-            }
-          ],
-          "defaultReasoningEffort": "medium",
-          "serviceTiers": [
-            {
-              "id": "priority",
-              "name": "Fast",
-              "description": "1.5x speed, increased usage"
-            }
-          ],
-          "defaultServiceTier": null,
-          "inputModalities": [
-            "text",
-            "image"
-          ],
-          "isDefault": false
         }
       ],
       "modelAliases": {},
@@ -267,8 +185,8 @@
       "reasoningSummary": "detailed",
       "environmentVariables": "",
       "environmentHash": "runtime-input:v1:e3c641bba9905ddff5464dc5d4c56339ae4cc171d2a208cc4c541d9b47a978e4",
-      "catalogTimestamp": 1789544418549,
-      "catalogFingerprint": "2:26860d5ebf6d4487f2b8c9ee6bcbc0593e6f2d7062e522a7df8fe215dc431a18",
+      "catalogTimestamp": 1793417907177,
+      "catalogFingerprint": "2:0d2d2b94c1fdab06a66f5f3adef8cfe18a8d82a485179c16c77c60013902d198",
       "installationMethodsByHost": {},
       "wslDistroOverridesByHost": {}
     },

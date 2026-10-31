@@ -6,12 +6,10 @@ tags: [FAE, ESP32-P4, ESP32-C6, BLE, ESP-Hosted]
 
 # ESP32-P4-WIFI6-POE-ETH
 
-### C6 Hosted 声明支持 BLE HCI，但蓝牙控制器初始化无确认
-- **客户问题/现象**：Wi-Fi 可用且 C6 上报 HCI 能力，但 P4 启动蓝牙控制器失败；客户希望确认出厂 Hosted 版本并寻找更可靠的蓝牙实现方案。
-- **涉及产品/型号**：ESP32-P4-WIFI6-POE-ETH、ESP32-C6。
-- **根因**：ESP32-P4 本身没有 Wi-Fi/蓝牙射频；P4 运行蓝牙 Host，C6 运行 Controller 并负责射频，双方通过 ESP-Hosted/SDIO 传输 HCI。P4 与 C6 的 ESP-Hosted 版本、RPC 协议和蓝牙配置不匹配时，即使 C6 声明 HCI 能力也可能初始化失败。
-- **回复内容（解决方法）**：优先使用经过该型号实机验证的成套 P4 示例与 C6 固件：P4 启用 Hosted Bluetooth 和 NimBLE、关闭本地 Controller；C6 使用同版本 ESP-Hosted Slave，启用 BLE Controller 与 Hosted HCI over SDIO。不要把面向 ESP32-S3 单芯片的蓝牙工程直接套到 P4，也不要只烧 P4 或随意打开两个宏。通过 C6 UART 启动日志查询 `ESP-Hosted-MCU Slave FW version :: X.Y.Z`，再与 P4 的 `dependencies.lock` 对照；用户历史实测过一块 C6 为 `0.0.6`，但版本号本身不能证明兼容。若不能修改 C6，只有外接独立蓝牙模块；另一方案是把完整蓝牙业务运行在 C6 上，由 P4 经 UART/自定义协议控制，但开发量更大。
-- **相关报错/日志**：历史实测：`I (...) fg_mcu_slave: ESP-Hosted-MCU Slave FW version :: 0.0.6`；应关注 C6 能力列表是否包含 `HCI over SDIO` 和 `BLE only`。
+> [!important] ⚠️ 产品参数 / 规格优先
+> 本页已将刷新率、供电/电流/电压、接口数量与类型、芯片/存储、尺寸结构及外设能力等**产品参数类问题集中置顶**。参数可能随硬件版本或批次变化；对外回复前请核对准确型号、PCB/芯片版本及条目中的 ⚠️/🔍 标记。
+
+## ⚠️ 产品参数 / 规格（优先查看）
 
 ### MP1658 与整板 5V 电源轨的电流上限
 - **客户问题/现象**：询问 MP1658GTF-Z 的最大输入电流、整板 `VCC_5V` 电源轨上限，以及能否从 5V 端子或 USB-A 给 4G 模块供电。
@@ -27,9 +25,26 @@ tags: [FAE, ESP32-P4, ESP32-C6, BLE, ESP-Hosted]
 - **回复内容（解决方法）**：对外可回复“套装OV5647配合ESP32-P4最高按1080P@30FPS采集与硬件编码理解；降低分辨率可配置更高摄像头输入帧率，实际输出取决于ISP、编码、显示和网络流程”。不要直接把OV5647在树莓派环境的720P@60FPS或VGA@90FPS承诺为本板实测结果。
 - **相关报错/日志**：⚠️ 800×1280 RAW8 50FPS是示例输入配置，不代表PoE网络推流或LCD显示可稳定输出50FPS。
 
+### 是否具备连续长视频录制的编码和存储能力
+- **客户问题/现象**：希望录制数小时长视频，询问该硬件的编码和存储能力。
+- **涉及产品/型号**：ESP32-P4-WIFI6-POE-ETH、MIPI-CSI、H.264、MicroSD/TF。
+- **根因**：具备摄像头输入、P4 H.264 Baseline 硬件编码及 TF 卡存储条件；32MB PSRAM 为运行缓存，Flash 主要用于固件/资源，不能作为长录像主要空间。1080p@30fps 是平台编码指标，不是整板数小时连续录像验证结果。
+- **回复内容（解决方法）**：开发“采集→编码→缓存→持续写 TF 卡”的流水线，并测试掉帧、供电、温升、写卡延迟和卡满处理；需要 MP4 时还需封装和正确关闭文件。FAT32 单文件上限约 4GB，应按时长/容量分段并支持异常断电恢复。仅计算视频负载时，2/4/8Mbps 约占 0.9/1.8/3.6GB 每小时，未含音频、封装和预留空间；这不证明具体容量 TF 卡已适配。先测单路 720p/30fps，再提高到 1080p/30fps。[本型号资料](https://docs.waveshare.net/ESP32-P4-WIFI6-POE-ETH/)、[乐鑫编码说明](https://docs.espressif.com/projects/esp-techpedia/en/latest/esp-friends/solution-introduction/multimedia/component-description/esp-h264.html)、[FatFs 限制](https://elm-chan.org/fsw/ff/doc/appnote.html)。
+- **相关报错/日志**：⚠️ 未见本板数小时或 24 小时录像实测，不能承诺出厂固件已实现。2026-10-08 所查产品文档标注 32MB NOR Flash，实板容量按批次核对。来源：客户问答“确认长视频录制能力”。
+
 ### PoE 和 Type-C 能否同时连接
 - **客户问题/现象**：询问 PoE 网线供电与 Type-C 供电/串口调试同时接入是否安全。
 - **涉及产品/型号**：ESP32-P4-WIFI6-POE-ETH。
 - **根因**：按该型号公开原理图分析，两路供电入口有板上电源路径处理；同系列 PoE 板的官方 FAQ 明示可同时接入，但该型号 FAQ 未单独给出双供电结论。
 - **回复内容（解决方法）**：在原厂配套 PoE 模块、标准 PoE 供电设备和正常 5V Type-C 电源条件下，按原理图判断可同时连接，用 Type-C 查看串口日志；两路供电能力不会相加。若是早期批次、改板或更换 PoE 模块，应按实际版次复核电源路径和防反灌，再做带电测试。[本型号原理图](https://files.waveshare.com/wiki/ESP32-P4-WIFI6-POE-ETH/ESP32-P4-WIFI6-POE-ETH-Schematic.pdf)、[同系列 FAQ](https://docs.waveshare.net/ESP32-P4-ETH/FAQ/)。
 - **相关报错/日志**：⚠️ “可同时接”是结合本型号图纸与同系列 FAQ 的判断，并非该型号 FAQ 的直接声明。
+
+## 其他问题
+
+### C6 Hosted 声明支持 BLE HCI，但蓝牙控制器初始化无确认
+- **客户问题/现象**：Wi-Fi 可用且 C6 上报 HCI 能力，但 P4 启动蓝牙控制器失败；客户希望确认出厂 Hosted 版本并寻找更可靠的蓝牙实现方案。
+- **涉及产品/型号**：ESP32-P4-WIFI6-POE-ETH、ESP32-C6。
+- **根因**：ESP32-P4 本身没有 Wi-Fi/蓝牙射频；P4 运行蓝牙 Host，C6 运行 Controller 并负责射频，双方通过 ESP-Hosted/SDIO 传输 HCI。P4 与 C6 的 ESP-Hosted 版本、RPC 协议和蓝牙配置不匹配时，即使 C6 声明 HCI 能力也可能初始化失败。
+- **回复内容（解决方法）**：优先使用经过该型号实机验证的成套 P4 示例与 C6 固件：P4 启用 Hosted Bluetooth 和 NimBLE、关闭本地 Controller；C6 使用同版本 ESP-Hosted Slave，启用 BLE Controller 与 Hosted HCI over SDIO。不要把面向 ESP32-S3 单芯片的蓝牙工程直接套到 P4，也不要只烧 P4 或随意打开两个宏。通过 C6 UART 启动日志查询 `ESP-Hosted-MCU Slave FW version :: X.Y.Z`，再与 P4 的 `dependencies.lock` 对照；用户历史实测过一块 C6 为 `0.0.6`，但版本号本身不能证明兼容。若不能修改 C6，只有外接独立蓝牙模块；另一方案是把完整蓝牙业务运行在 C6 上，由 P4 经 UART/自定义协议控制，但开发量更大。
+  通信架构补充（2026-10-31）：正常架构为 `P4 应用 → esp_wifi_remote / ESP-Hosted Host ⇄ 板内 SDIO ⇄ ESP32-C6 ESP-Hosted Slave → 无线网络`。SDIO 的 CLK、CMD、DAT 信号已由板内走线连接，使用对应官方固件不需要再用杜邦线把 P4 UART 与 C6 UART 相连。P4 编写业务并经适配层使用 `esp_wifi_init()`、`esp_wifi_set_config()`、`esp_wifi_start()`、`esp_wifi_connect()` 等 API；C6 负责无线射频和从机业务。若启用 BLE，P4 的 Host 与 C6 Controller 还需匹配的 Hosted HCI/VHCI 支持，不能由 Wi-Fi 正常推断 BLE 已开启。若板上引出 C6 UART，通常用于独立烧录/日志维护，并非该产品默认的 Wi-Fi AT 主通道。保持本型号 P4 端依赖、SDIO 配置与 C6 从机固件配套，主从版本号数值不必相同；不要改刷普通 ESP-AT，也不要把 P4 镜像写给 C6。已有兼容从机固件时，日常只更新 P4 应用；仅烧 P4 不会自动更新从机。 支持2.4 GHz Wi-Fi 6与BLE，不把Wi-Fi 6等同5 GHz，也不把BLE等同经典蓝牙音频。 [本型号官方资料](https://docs.waveshare.net/ESP32-P4-WIFI6-POE-ETH/)，本次板内连接依据本地 Docs_zh 的 `ESP32-P4-WIFI6-POE-ETH/Product-Overview.md`。
+- **相关报错/日志**：历史实测：`I (...) fg_mcu_slave: ESP-Hosted-MCU Slave FW version :: 0.0.6`；应关注 C6 能力列表是否包含 `HCI over SDIO` 和 `BLE only`。

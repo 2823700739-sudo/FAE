@@ -1,20 +1,27 @@
 {
   "id": "conv-1789632097792-my7rwlep6",
   "providerId": "codex",
-  "title": "按产品系列和型号分类知识库索引",
+  "title": "置顶产品参数问题并添加醒目提醒",
   "titleGenerationStatus": "success",
   "createdAt": 1789632097800,
-  "lastActivityAt": 1789643944433,
-  "sessionId": null,
+  "lastActivityAt": 1792495754938,
+  "sessionId": "01a1590f-092d-7860-b94e-05fce521c1c0",
   "selectedModel": "gpt-5.6-sol",
+  "providerState": {
+    "threadId": "01a1590f-092d-7860-b94e-05fce521c1c0",
+    "nativeConversationContextEstablished": true,
+    "sessionFilePath": "C:\\Users\\admin\\.codex\\sessions\\2026\\10\\20\\rollout-2026-10-20T19-25-20-01a1590f-092d-7860-b94e-05fce521c1c0.jsonl",
+    "transcriptRootPath": "C:\\Users\\admin\\.codex\\sessions",
+    "workspaceDependencyToolVersion": 1
+  },
   "usage": {
-    "inputTokens": 39176,
+    "inputTokens": 72676,
     "cacheCreationInputTokens": 0,
-    "cacheReadInputTokens": 38144,
+    "cacheReadInputTokens": 71040,
     "contextWindow": 258400,
     "contextWindowIsAuthoritative": true,
-    "contextTokens": 39176,
-    "percentage": 15,
+    "contextTokens": 72676,
+    "percentage": 28,
     "model": "gpt-5.6-sol"
   }
 }

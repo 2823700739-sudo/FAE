@@ -29,6 +29,20 @@
       "contentDigest": "8c45642078c9a2713bddeb61bd677102bb23ddf06ce289895a15bb403e0f0e42",
       "providerUserMessageId": "01a0af14-b885-7d30-bc59-a8fcdd22866a",
       "providerAssistantMessageId": "msg_030633d3868db4f1016aabcca4689487d0ad1f6072bdc72d11"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1792495518241-u7wfpgm",
+      "userTurnOrdinal": 1,
+      "state": "accepted",
+      "localMessageId": "msg-1792495518201-ed3is2l",
+      "timestamp": 1792495518201,
+      "rawDisplayText": "整理一下知识库，把凡是产品相关参数的问题都放到最上面，比如刷新率多少之类的，并做醒目提醒",
+      "canonicalText": "整理一下知识库，把凡是产品相关参数的问题都放到最上面，比如刷新率多少之类的，并做醒目提醒",
+      "images": [],
+      "contentDigest": "8dbaf5ad61131b202e56911c3b62a296cb75d3e45723bd50af223ab797cdd3f6",
+      "providerUserMessageId": "01a1590f-1449-78e3-b573-6768b86c61f7",
+      "providerAssistantMessageId": "msg_07cb2142862927bc016ad7508510bc8191a0a53e3079ff0646"
     }
   ]
 }
