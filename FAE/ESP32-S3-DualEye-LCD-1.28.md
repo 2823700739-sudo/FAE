@@ -47,3 +47,10 @@ tags: [FAE, ESP32-S3, 音频, AEC, 电机, 舵机]
 - **根因**：FIN/EOF表示底层连接关闭，不直接说明无线硬件故障；证书验证通过也不代表MQTT登录/订阅完成。
 - **回复内容（解决方法）**：保持固件/服务端不变换2.4GHz热点对照；排除重复Client ID，按断开时间查Broker/网关日志、Keep Alive和PING。打印MQTT_EVENT_ERROR/CONNECTED及Wi-Fi断线原因，区分网络掉线和服务端关闭；SRAM余量数值本身不能证明分配失败。[IDF MQTT](https://docs.espressif.com/projects/esp-idf/zh_CN/v5.4.2/esp32s3/api-reference/protocols/mqtt.html)。
 - **相关报错/日志**：`transport_read(): EOF`、`ESP_ERR_ESP_TLS_TCP_CLOSED_FIN`、`mqtt_message_receive() returned -2`；⚠️ 根因待固件/服务端日志确认。
+
+### 分板并用 FPC 连接后反复重启，怎样区分软件复位与供电复位
+- **客户问题/现象**：USB供电，两屏已分板并用FPC相连；两份不断重启日志复位原因不同。
+- **涉及产品/型号**：ESP32-S3-DualEye-LCD-1.28（非Touch）、noise_fw0.2.0、ESP-IDF5.5.5日志。
+- **根因**：⚠️ 未定位。第一份约0.73秒RTC_SW_SYS_RST、Saved PC相同；第二份POWERON并在约680ms后中断，可能供电/EN或初始化流程，不能直接判坏板或特定函数出错。
+- **回复内容（解决方法）**：优先断电检查分板断口、FPC触点方向/同异面/锁扣与供电和RESET通路，P1/P2虽同为14针定义不同，不能互换。换原短线对照，示波器观察主控3.3V与EN瞬态；USB接着不代表分板后供电稳定。用匹配官方固件和原结构作对照，逐项停用屏/音频/Wi-Fi初始化并增加打印；日志brain:新建后中断只是线索。POWERON不等于人为拔插，软件复位也不能仅凭原因码认定主动esp_restart。原FAQ建议IDF5.4.1可作版本对照，不确诊5.5.5不兼容。关联本文件既有分板USB/充电接线说明，改装需逐接口核对。
+- **相关报错/日志**：状态：待接线照片、分板前对照和代码/电压日志；未恢复验证。来源：2026-11-03《排查ESP32-S3-DualEye故障原因》，本次逐条读取原聊天；资料/源码分析与实机结果分开记录。

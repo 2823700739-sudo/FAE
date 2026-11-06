@@ -39,6 +39,13 @@ tags: [FAE, ESP32-P4, USB, UART, 舵机]
 - **回复内容（解决方法）**：可评估空闲GPIO4作信号，舵机按规格独立供电并与板共地，确认支持3.3V控制。LEDC选未占用定时器/通道；常见50Hz、1500µs中位，先小幅调节，不直接套500～2500µs全行程。供电覆盖启动/堵转电流。[舵机说明](https://docs.espressif.com/projects/esp-iot-solution/en/latest/motor/servo.html)。
 - **相关报错/日志**：⚠️ 舵机型号和行程未确认，未实机测试。
 
+### 06_I2SCodec 示例怎样调整扬声器音量
+- **客户问题/现象**：客户询问此示例声音如何调大小。
+- **涉及产品/型号**：ESP32-P4-WIFI6-Touch-LCD-XC系列、06_I2SCodec、ES8311；具体屏尺寸未明确。
+- **根因**：该示例播放音量由EXAMPLE_VOICE_VOLUME传入ES8311设置函数，不是Mic录音增益。
+- **回复内容（解决方法）**：原核查[Kconfig.projbuild](https://github.com/waveshareteam/ESP32-P4-WIFI6-Touch-LCD-XC/blob/main/examples/esp-idf/06_I2SCodec/main/Kconfig.projbuild)参数范围0～100、默认60；idf.py menuconfig→Example Configuration→Voice volume调整后编译烧录。也可在main/example_config.h调整EXAMPLE_VOICE_VOLUME，初始化通过es8311_voice_volume_set(es_handle,EXAMPLE_VOICE_VOLUME,NULL)设置。优先保留配置菜单路径，避免硬编码使菜单失效；以实际工程版本为准。
+- **相关报错/日志**：🔍 源码设置入口已在原问答核对，未上板对比声压/失真，不代表更大数值必然更清晰。来源：2026-11-03《调整 I2SCodec 音量》，本次逐条读取原聊天；资料/源码分析与实机结果分开记录。
+
 ## 其他问题
 
 ### Host BT Support Disabled 是什么，IDF 6.0.2 如何开启 BLE

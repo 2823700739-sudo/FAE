@@ -80,6 +80,8 @@ tags: [FAE, ESP32, LVGL, Arduino, ESP-IDF]
 - **涉及产品/型号**：ESP32 系列；已有 P4 开发板/Module 自制底板案例，新增 `2-sync fail` 截图未明确板型和工具版本。
 - **根因**：这是串口握手失败而不是编译失败。常见原因是芯片未进入下载模式、COM被占用或选错、自动复位电路未生效、数据线/USB口异常；原生USB进入下载模式后COM号也可能改变。
 - **回复内容（解决方法）**：关闭所有串口终端，按住BOOT、短按RST/EN并保持BOOT，使用115200开始烧录，检测到芯片信息后再松开；重新拔插确认新增COM，换数据线并直连电脑，确认连接的是下载用USB口。可用`python -m esptool --chip esp32p4 -p COMx -b 115200 chip-id`只测试握手。自制底板或外接TTL还应确认3.3V电平、共地、TTL TX接P4 GPIO38/U0RXD、TTL RX接GPIO37/U0TXD，复位采样时GPIO35/BOOT拉低、GPIO36/BOOT_EN保持高电平且EN有复位脉冲。
+  2026-11-02补充：用户清单另有未知型号Arduino上传失败：先关闭可能占用串口的终端/监视器，按该板教程保持BOOT后重新上电进入下载模式，选择新出现的COM，直连电脑USB并换已知可传数据的线。该案例尚无报错/板型和复测结果，不能套用本段P4专用GPIO，也不一律认为BOOT插USB适用所有带电池或电源管理的板卡。来源：本聊天18项支持清单，状态待反馈；无客户身份信息入库。
+  2026-11-04补充：本批ESP32-S3下载失败案例，按断电后保持BOOT接Type-C、或保持BOOT按Reset进入下载态，并更换线材/COM后，原汇总标已解决。具体S3板型、哪一步实际生效和报错未提供；仍按对应板教程执行，装电池时拔USB未必完整断电，不把P4专用引脚用于S3。来源：本批27项支持汇总。
 - **相关报错/日志**：`Failed to connect to ESP32-P4: No serial data received`、`Failed uploading: exit status 2`、`2-sync fail`。未知板型需先确认主控、工具版本、下载接口和 COM，不能仅凭弹窗确定启动脚错误或板卡损坏，也不能照搬 P4 的具体 GPIO。新增来源：2026-10-08 同步失败截图；[乐鑫排障说明](https://docs.espressif.com/projects/esptool/en/latest/esp32/troubleshooting.html#bootloader-won-t-respond)。
 
 ### 工程名称是 ESP32-S3，但构建和烧录目标为 ESP32-P4

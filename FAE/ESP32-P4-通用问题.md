@@ -51,6 +51,7 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **涉及产品/型号**：ESP32-P4 rev v1.x（常见 v1.3）、rev v3.0/v3.1/v3.2。
 - **根因**：v1→v3 是主硅片版本变化，不只是频率调整。v3 最高主频由 360MHz 提升到 400MHz，并改动 CPU 指令/中断、L2MEM Cache、GDMA、ISP/PPA/H.264、低功耗和安全模块；裸芯片的 54 脚、USB_DP 与 DCDC 参考外围也有调整。启动阶段、ROM、内存布局和寄存器差异使面向两代芯片生成的 bootloader 与应用 BIN 不能通用。v1.3 有 EOL 规划风险，但不能表述为“已经停产”或“完全不能使用 IDF 6.0.2”。
 - **回复内容（解决方法）**：同一套业务源码通常可以共用，推荐维护两套构建配置并分别全量编译。使用 ESP-IDF v5.5.3+ 或 v6.0+：v1.x 启用 `CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y`，最低版本通常设 `CONFIG_ESP32P4_REV_MIN_100=y`；v3.x 关闭 pre-v3 选择，按需求设 `CONFIG_ESP32P4_REV_MIN_300=y` 或 `301=y`。切换版本后执行 `idf.py fullclean`，必要时移走旧 `sdkconfig` 后重新生成，不能用 `--force` 绕过版本检查。直接访问寄存器、私有 `soc` 头文件、汇编或预编译库的工程需要额外适配；PSRAM、USB、SDMMC、摄像头、显示和休眠功能应分别实机回归。新项目优先确认 v3.1 或更高具体小版本；已有 v1.3 项目可继续维护，但量产应区分 v1/v3 固件。
+  2026-11-06补充：2026-11-05《核实客户说法》讨论v1.3/PSRAM200MHz与720×720撕裂/崩溃：原问答引用官方升级通知，v1.3参考CPU360MHz/PSRAM200MHz、v3.2为400/250MHz，具体板参数仍按版本。v1.3修订号不能单独判工程样片；用户在后续明确其所述批次已核实为量产芯片，此为该批次反馈，不以数据手册版本号替代芯片批次证据。原问答区分v3.0所列MSPI勘误影响范围，不将其直接套v1.3；收集实际SDK/ESPHome、日志/回溯、显示配置、五台一致性及原厂固件对照后再判断。EOL规划与性能差异不能证明当前显示故障命中勘误，也不因原回复提停产通知就宣称已停止供货。
 - **相关报错/日志**：`chip version mismatch`、`Illegal instruction`、`CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y/n`。
 
 ### 如何从启动日志确认芯片 revision，ROM 和 eFuse 版本是否相同
@@ -73,6 +74,36 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **根因**：芯片工业温度与整板工业级不是同一概念；开发板/HMI的“适合工控”也不等于通过工业认证。
 - **回复内容（解决方法）**：公开资料中没有足够证据把常规P4开发板直接定义为完整工业级。选型至少核对整板工作温度、电源宽压与保护、接口隔离/TVS、EMC抗扰度、湿热/振动/冲击、IP/阻燃、固定BOM和长期供货。温和室内环境可先用86面板版做样机；严苛现场必须要整机报告和现场验证。
 - **相关报错/日志**：ESP32-P4芯片温度规格不能代表LCD、PHY、电源、连接器等整板最弱器件。
+
+### 4-lane MIPI 屏能否改为 2-lane 使用
+- **客户问题/现象**：客户咨询MIPI屏支持及4通道屏能否使用；表中产品写WIFI6-DEV-KIT，依据却写Module-DEV-KIT-C。
+- **涉及产品/型号**：ESP32-P4平台；ESP32-P4-WIFI6-DEV-KIT与ESP32-P4-Module-DEV-KIT-C的具体客户板型待核实。
+- **根因**：ESP32-P4的MIPI-DSI最多2条数据lane；屏是否能降到2-lane取决于驱动IC、模组接线/配置和带宽，不取决于连接器针数。
+- **回复内容（解决方法）**：原答为最大2通道，部分4通道屏可改初始化使用2通道，第三方屏需客户适配。经本次[乐鑫LCD FAQ](https://docs.espressif.com/projects/esp-faq/en/latest/software-framework/peripherals/lcd.html)核对，应收窄为：仅屏IC/模组支持切换且针脚/时序兼容时才能评估；不能承诺所有4-lane屏都可改。先索取屏规格和初始化表，核对DSI而非CSI、lane、供电/复位及分辨率/刷新率带宽，必要时调整目标时序。
+  2026-11-04补充：另有已明确ESP32-P4-WIFI6-DEV-KIT、280×1424屏的问答：DSI支持1/2-lane，需屏支持Video Mode及2-lane切换。RGB888、60Hz有效像素数据约574Mbps仅为计算值，还须计消隐/协议开销与目标lane速率；没有屏型号/IC/规格，不保证点亮。该新问答不能反向证明前述型号不一致的历史汇总就是同一客户。来源：《确认 MIPI2 屏幕通道兼容性》。
+- **相关报错/日志**：🔍 最大2-lane已由官方文档核对，具体第三方屏与客户板型未联调。来源：本聊天用户提供的27项客户支持汇总，2026-11-04入库；原个案时间及原始附件未提供。
+
+### 第三方 GT911 触摸是否属于已适配支持
+- **客户问题/现象**：客户追问第三方GT911 TP适配，原答称第三方屏幕适配不在技术支持范围。
+- **涉及产品/型号**：ESP32-P4开发板；表中WIFI6-DEV-KIT与依据中的Module-DEV-KIT-C存在型号不一致。
+- **根因**：支持服务范围与硬件/驱动可实现性不同；只有触摸芯片型号不足以确认整块第三方屏兼容。
+- **回复内容（解决方法）**：按本次支持答复，第三方屏/触摸定制移植由客户自行完成，未承诺提供该屏成品适配。不能将“未提供第三方适配服务”改写成P4不支持GT911；若继续评估，需确认准确板型、I2C电平/地址、复位与中断、触摸坐标和软件驱动。原记录已告知不支持的是本次适配服务，并非硬件不兼容已获证明。
+- **相关报错/日志**：状态：支持边界已告知；第三方GT911屏未验证。来源：本聊天用户提供的27项客户支持汇总，2026-11-04入库；原个案时间及原始附件未提供。
+
+### 22Pin DSI 接第三方 ST7701S 时 I2C、复位及供电能否直接套用
+- **客户问题/现象**：客户询问22Pin DSI上的I2C、通过IO扩展器控制LCD_RESET、3.3V带250～300mA及I2C改PWM；另建议SD卡座改按压弹出式。
+- **涉及产品/型号**：ESP32-P4某22Pin DSI开发板、第三方ST7701S屏；准确板型与屏模组未知。
+- **根因**：⚠️ 22Pin不是统一接口标准，缺图纸不能确认I2C脚位/引出、额外载流或屏电气兼容；ST7701S芯片名也不能确认模组实际接的是DSI接口。
+- **回复内容（解决方法）**：保留历史逐项答复：当时称有I2C引出，可加I2C GPIO扩展器控制RESET，3.3V供250～300mA可用，相关I2C脚可改PWM但失去I2C功能。复用前必须补准确板图/针序、屏规格和当前3.3V负载；250～300mA不作为所有P4或该未知接口的已测外供额定值。IO扩展器需核对地址/电平和复位默认态；改PWM还需核对引脚能力及共享触摸/音频等占用，不能破坏正在使用的总线。SD卡座建议因空间限制当时未采纳，不作为全部型号永久规划。
+  2026-11-04补充：本次读到明确板型的原问答，具体为ESP32-P4-WIFI6/WIFI6-M非NANO，J2脚位、MP1658GTF-Z以及I2C直接改PWM的影响见[[ESP32-P4-WIFI6#22Pin DSI 的 I2C、RESET 扩展和 PWM 怎样使用，3.3V能带多少电流]]。原聊天明确250～300mA尚不能确认，优先采用此有条件结论；前述汇总的“没问题”不能作为接口额定值。无供电实测。
+- **相关报错/日志**：🔍 待补产品型号、图纸及实测，未新增供电或第三方屏兼容保证。来源：本聊天用户提供的27项客户支持汇总，2026-11-04入库；原个案时间及原始附件未提供。
+
+### 所给 C6 Hosted 源码主要运行什么，业务逻辑放在哪端
+- **客户问题/现象**：客户提供esp_hosted-0.0.6(1)源码包，询问C6主要执行的程序。
+- **涉及产品/型号**：ESP32-P4平台+C6、所给ESP-Hosted源码快照；实际板载BIN未提供。
+- **根因**：该快照是无线协处理器从机工程，与P4业务应用和完整独立Zigbee/屏幕工程不同。
+- **回复内容（解决方法）**：原问答核查slave/main/app_main.c初始化NVS、BLE、传输与收发任务；slave_control.c处理Wi-Fi控制；sdio_slave_api.c搬运主从数据；slave_bt.c负责BLE Controller/HCI。默认配置经SDIO复用Wi-Fi控制/数据及BLE HCI，源码另有SPI/UART相关选择，不能推定实际BIN全开。P4运行应用/TCPIP/HTTP/MQTT及界面等，C6负责无线管理与收发；所查从机无独立屏、摄像头、MQTT或Zigbee/Thread应用。源码默认不代表出厂固件编译选项。
+- **相关报错/日志**：🔍 本次另核对该包idf_component.yml声明version0.0.6，构建文件0.0.6；未编译/烧录或与出厂BIN逐字比对。来源：2026-11-05《定位 P4 的 C6 固件代码》，本次读取完整原问答；除另注外无本板实测。
 
 ## 其他问题
 
@@ -167,6 +198,7 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **涉及产品/型号**：带板载 ESP32-C6 的 ESP32-P4 产品；以 ESP32-P4-WIFI6 为例。
 - **根因**：ESP-Hosted 提供 Slave OTA RPC，P4 可经已建立的 SDIO 链路把 C6 应用镜像分块传输并激活；但前提是当前 C6 能正常启动、分区表支持 OTA、固件实现对应 RPC，并且 P4 与 C6 使用兼容的 ESP-Hosted 版本和传输配置。
 - **回复内容（解决方法）**：先从相同 ESP-Hosted 版本的 `slave` 示例编译 ESP32-C6，传输方式选择与板卡一致的 SDIO，得到 `network_adapter.bin` 应用镜像；不要把 P4 固件或随意合并的全量镜像用于 Slave OTA。P4 端使用 `host_performs_slave_ota` 示例，可将 `network_adapter.bin` 放入示例的 LittleFS 固件目录，选择 LittleFS OTA 后编译烧录 P4。P4 启动后依次执行版本查询、`esp_hosted_slave_ota_begin/write/end/activate`，校验成功后重启 C6并重新建立 SDIO。ESP32-P4-WIFI6 的示例 SDIO 引脚为 CMD=GPIO19、CLK=GPIO18、D0～D3=GPIO14～17、C6_RST=GPIO54；其他型号必须按各自原理图核对。该方式不是救砖通道：若 SDIO 无法建立、C6 bootloader/分区表损坏、旧固件不支持 OTA RPC，仍需将 C6 IO9 拉低进入下载模式，使用 3.3V TTL 直接烧录。
+  2026-11-06补充：2026-11-05《定位 P4 的 C6 固件代码》检查另一份esp_hosted-0.0.6(1)快照：旧Host接口是esp_hosted_ota(image_url)，其iperf示例经HTTP取network_adapter.bin并通过既有链路交给C6 OTA；原核查称完成后也重启P4。本次元数据确认该包声明0.0.6且头文件有此函数。勿把新版esp_hosted_slave_ota_begin/write/end/activate直接套进旧包；官方[2.11.4 host_performs_slave_ota](https://components.espressif.com/components/espressif/esp_hosted/versions/2.11.4/examples/host_performs_slave_ota?language=en)可理解流程但按版本迁移。串口首次烧录/救砖与OTA分开，仍需准确板型的C6 IO9/供电/主从版本配置；无本次升级实测。
 - **相关报错/日志**：成功流程常见 `OTA completed successfully`、`New firmware activated`；失败可能出现 `Version query failed`、`OTA begin failed`、`Failed to initialize ESP-Hosted`。
 
 ### 启动到 entry 后反复出现 CHIP_LP_WDT_RESET
@@ -189,4 +221,12 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **涉及产品/型号**：ESP32-C6、ESP-Hosted 0.0.6、ESP-IDF 5.3.x。
 - **根因**：提供的 `esp-hosted-mcu-release-0.1` 源码包在 `idf_component.yml` 中声明的实际版本是1.4.7；文档中的0.0.6只是开发板出厂预烧录版本说明。仅修改版本字符串不能得到真正的0.0.6。
 - **回复内容（解决方法）**：需要精确0.0.6时，用ESP-IDF 5.3.x执行 `idf.py create-project-from-example "espressif/esp_hosted^0.0.6:slave"`，进入生成的 `slave` 工程，`idf.py set-target esp32c6`，在Example Configuration中选择SDIO传输后编译。主要产物包括 `network_adapter.bin`、bootloader、partition-table和ota_data_initial；P4端与C6端应固定匹配的Hosted版本。原附件中可编译工程目录是 `slave`，入口为 `slave/main/app_main.c`，但编译结果属于1.4.7而不是0.0.6。ESP-IDF 5.5.x对旧0.0.6可能因组件拆分和API变化编译失败，不应强行混用。
+  2026-11-06补充：本次新增读取的esp_hosted-0.0.6(1)/esp_hosted-0.0.6/esp_hosted与上文esp-hosted-mcu-release-0.1不是同一源码包：本次直接核对idf_component.yml的version为0.0.6、IDF约束≥5.3，slave/CMakeLists.txt构建版本0.0.6，Host头文件有esp_hosted_ota。它的slave为C6工程入口；未因目录名而确认出厂BIN等同该源代码，也未验证所有满足≥5.3的新版SDK可直接编译。旧包1.4.7判断仅限原指定附件。
 - **相关报错/日志**：正确固定版构建会显示 `Building ESP-Hosted-MCU FW :: 0.0.6`；附件元数据版本为 `1.4.7`。
+
+### TF 卡不能使用，提供板级示例后客户反馈恢复
+- **客户问题/现象**：客户反馈P4平台TF卡无法使用，提供SD卡示例后确认解决。
+- **涉及产品/型号**：ESP32-P4平台；确切开发板、TF卡与示例版本未注明。
+- **根因**：⚠️ 缺少原错误日志和具体修改，无法确认是引脚、供电、总线配置、文件系统或应用问题。
+- **回复内容（解决方法）**：保留本例运行对应SD卡示例后客户反馈已解决的结果。复用前先确认板型，再用该板官方SD/SDMMC示例核对挂载与读写，不能跨板照搬GPIO和LDO配置。原清单未附示例URL、卡容量/格式，不补造；有数据的卡不先格式化。
+- **相关报错/日志**：状态：客户反馈已解决，根因和复现步骤待补。来源：本聊天用户提供的18项支持清单，2026-11-02入库；原个案日期、固件版本及附件链接未提供。

@@ -47,3 +47,24 @@ tags: [FAE, ESP32-P4, 以太网, 结构尺寸]
 - **根因**：板卡的一路2-lane MIPI-CSI与USB 2.0 High-Speed Host是独立链路，硬件具备同时采集条件；但官方没有现成双摄整合例程，双路缓冲、ISP、解码、编码、AI和Wi-Fi会共同占用PSRAM带宽与处理资源。
 - **回复内容（解决方法）**：CSI优先用官方适配OV5647；USB选择支持MJPEG输出的UVC摄像头，从640×480@15fps开始。在同一ESP-IDF工程中分别建立CSI与UVC采集设备，使用独立任务和帧缓冲，避免直接拼接两个示例，并通过降低分辨率/帧率或错峰处理控制资源。USB摄像头耗电较大时使用自供电Hub。双路预览、拍照或低帧率识别通常可评估实现，但两路1080P@30fps同时解码、AI、编码和Wi-Fi输出不能直接保证。
 - **相关报错/日志**：⚠️ 暂无微雪针对本板的CSI+USB UVC双摄完整官方例程，最终能力需按目标算法和输出链路实机压力测试。
+
+### 03_wifistation 有无显式5GHz设置，硬件双频是否等于默认连5GHz
+- **客户问题/现象**：客户先贴DB的06_wifi后改贴NANO-WIFI6-DB的03_wifistation要求检查。
+- **涉及产品/型号**：ESP32-P4-NANO-WIFI6-DB、ESP32-C5、03_wifistation；不要与普通DB工程混同。
+- **根因**：硬件支持双频与示例显式频段策略、C5固件能力/配置是不同层次。
+- **回复内容（解决方法）**：2026-11-03原检查[03_wifistation](https://github.com/waveshareteam/ESP32-P4-NANO-WIFI6-DB/tree/main/examples/esp_idf/03_wifistation)：STA仅设SSID/密码/认证，无显式esp_wifi_set_band_mode等；SoftAP菜单信道1～13默认1，为2.4GHz配置；defaults未明确开启5GHz。C5硬件具备2.4/5GHz能力，但上述缺少显式配置既不能证明默认已连5GHz，也不能反推绝不支持自动选择。需核对P4 Hosted与C5从机、地区/信道和实际关联频段后测试。
+- **相关报错/日志**：🔍 源码检查，无5GHz连接/吞吐实测；普通DB的06_wifi未形成独立最终答复，不照搬本工程结论。来源：2026-11-03《调整 I2SCodec 音量》，本次逐条读取原聊天；资料/源码分析与实机结果分开记录。
+
+### 05_I2SCodec 中喇叭使能、音量和播放代码在哪里
+- **客户问题/现象**：客户寻找扬声器发声相关配置代码。
+- **涉及产品/型号**：ESP32-P4-NANO-WIFI6-DB、examples/esp_idf/05_I2SCodec、BSP_POWER_AMP_IO。
+- **根因**：原核查显示发声需功放使能、Codec/I2S初始化、音量以及实际音频写入配合，单有音量变量不能证明整条链路正常。
+- **回复内容（解决方法）**：原问答定位[main/i2s_es8311_example.c](https://github.com/waveshareteam/ESP32-P4-NANO-WIFI6-DB/blob/main/examples/esp_idf/05_I2SCodec/main/i2s_es8311_example.c)：gpio_init将BSP_POWER_AMP_IO拉高，所检BSP宏为GPIO53；es8311_codec_init配置采样/格式并调用bsp_extra_codec_volume_set；i2s_music循环把内置canon.pcm交给bsp_extra_i2s_write。menuconfig→Example Configuration选music，Voice volume为0～100、默认60。BSP宏与格式按所用版本核对，勿套用普通NANO/XC的功放引脚或函数。
+- **相关报错/日志**：🔍 原问答源码核查，未进行实板播放与音量测试。来源：2026-11-05《Locate speaker output configuration》，本次读取完整原问答；除另注外无本板实测。
+
+### 摄像头1080p能跑多少帧，30fps指哪一段链路
+- **客户问题/现象**：客户询问本板摄像头1080p帧率。
+- **涉及产品/型号**：ESP32-P4-NANO-WIFI6-DB、2-lane MIPI-CSI、官方适配OV5647。
+- **根因**：H.264编码器能力、传感器输出模式、显示刷新和网络推流端到端帧率是不同指标。
+- **回复内容（解决方法）**：原问答以P4 H.264硬编1080p30作为参考，并明确未找到本板完整链路1080p实测。复用时先明确是采集、屏预览、编码录像还是Wi-Fi推流，再核对传感器模式、格式/ISP、缓冲和传输链路；不能把硬编30fps或摄像头标称值当作稳定端到端保证。客户尚未明确使用路径，亦未实际测得30fps。
+- **相关报错/日志**：状态：已解释指标边界，待确认用途和测量条件；无完整链路帧率日志。来源：2026-11-05《查询摄像头1080p帧率》，本次读取完整原问答；除另注外无本板实测。

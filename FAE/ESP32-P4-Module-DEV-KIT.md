@@ -166,6 +166,13 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - **回复内容（解决方法）**：⚠️ 不要仅按商品图下单。以开发板 SKU 30844 向微雪确认 F 型能否直插、PoE 四针与 40Pin 相对位置及 C 套装 10.1 英寸屏的总供电预算；C 型也需单独确认，不可因树莓派 3B+/4B 兼容而推定兼容本板。若最终使用 F 型，按其规格准备 802.3at PoE+ 设备；标称 5V/4.5A 是模块输出上限，由主板和外设共同分配。[开发板文档](https://docs.waveshare.com/ESP32-P4-Module-DEV-KIT)、[PoE HAT (F) 产品页](https://www.waveshare.com/product/raspberry-pi/hats/interface-power/poe-hat-f.htm)。
 - **相关报错/日志**：🔍 尚无 C/F 与该板的实装验证记录，待厂商确认。
 
+### FSM42A3729H11-001 是数字还是模拟麦克风
+- **客户问题/现象**：客户询问FSM42A3729H11-001类型，随后提供Module-DEV-KIT原理图。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、MIC1、ES8311；MIC1与该型号的BOM对应关系未提供。
+- **根因**：按原问答图纸，MIC1输出经L3/C93进入ES8311 MIC1P模拟输入，无麦克风数字时钟；原理图引脚名DAT不等于数字输出。
+- **回复内容（解决方法）**：可确认所给图纸的MIC1是模拟输出：VDD接A3V3，2/3脚接模拟地，4脚经滤波/耦合至MIC_P。录音链为模拟麦克风→ES8311 ADC→I2S→P4。只有BOM确认MIC1就是FSM42A3729H11-001后，才能把该型号与此结论对应；不单凭型号/引脚数量判断。区分模拟OUT、PDM CLK/DATA及I2S BCLK/WS/DATA，并以具体器件手册为准。[图纸来源](https://www.waveshare.net/w/upload/a/a9/ESP32-P4-Module-DEV-KIT.pdf)。
+- **相关报错/日志**：🔍 板上MIC1类型按图纸判断；精确麦克风料号待BOM或器件规格确认。来源：2026-11-06《确认 FSM42A3729H11-001 麦克风类型》，本次读取完整原问答；除另注外无本板实测。
+
 ## 其他问题
 
 ### 安全启动后 USB 烧录在擦除阶段中断是否已锁死
@@ -173,7 +180,10 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、Secure Download Mode、约900KiB独立App@0x40000。
 - **根因**：连接安全下载已证明当前通道可通信；擦除中断与启动验签失败不同，不能据此断言下载永久关闭或密钥撤销。
 - **回复内容（解决方法）**：区分USB-OTG ROM下载与USB Serial/JTAG；后者若未被安全eFuse禁用仍可按安全下载限制/no-stub使用。先115200手动BOOT并只读get-security-info，保留启动日志、IDF/工具版本、Flash加密及擦除等待时间；确认仅写App还是也更新bootloader，aggressive revoke另需审核。App须匹配有效公钥摘要的私钥签名，BIN保存签名不是私钥。后续纠正：结束0x00120FFF，从0x40000约900KiB，不是先前误读的16MB越界。擦除可能已部分发生，RTS复位不表示写入成功。禁止擅自烧eFuse/撤销密钥/erase-all。
+  2026-11-04补充：本批另有签名固件后UART擦除无响应的后续支持结论：我方确认未配置DOWNLOAD_MODE_XPD_ON，并据Flash下载态上电问题解释后续擦除无响应，可能需硬件调整；客户已了解，原答将该定制处理列为支持范围外，但无修复复测。未附芯片revision、eFuse读取、Flash电压或改硬件方案，不能据此覆盖所有擦除超时根因，也未确认与前述USB截图是同一块板。官方[ROM-816](https://docs.espressif.com/projects/esp-chip-errata/en/latest/esp32p4/03-errata-description/esp32p4/device-hang-when-flash-power-on-sequence-runs-twice-with-rom-download-xpd-on-efuse.html)说明v3.2引入rom_download_xpd_on，并存在同一完整上电复位窗口重复Flash上电流程致挂起的风险；只在确需Secure Download Mode时评估该位，配置后再次下载前需完整POR。汇总字段DOWNLOAD_MODE_XPD_ON与实际工具命名需按版本核对，不直接照抄执行不可逆eFuse写入或任意硬件改动。来源：本批27项支持汇总。
 - **相关报错/日志**：⚠️ 2026-10-28未确诊；`Erasing flash...`、`Serial data stream stopped`；尚无写入完成或签名错误证据。[官方安全限制](https://docs.espressif.com/projects/esp-idf/en/stable/esp32p4/security/secure-boot-v2.html)。
+  2026-11-02补充：今日截图对应SPI_ATTACH(0x0d)已正常回复，FLASH_BEGIN(0x02)后约36.875秒无回复；范围0x00040000～0x00120fff为900KiB。Possible serial noise or corruption是通用提示，不能证明线噪声，也无写入完成/验签失败/密钥撤销证据。建议手动下载模式、关闭串口占用，以115200和--no-stub执行只读get-security-info并提供完整命令/版本；不执行erase-all或eFuse操作。该截图未再次明确板型，此处按前次安全启动问题关联归档，需复核是否同一块板。来源：2026-11-02仅附烧录日志截图的聊天。
+  2026-11-04补充：本次完整读取《安全下载模式烧录失败》，已明确板型Module-DEV-KIT、COM8是板载USB-UART、P4 v3.2，启动自动开启安全模式来自menuconfig。原日志SYNC/GET_SECURITY_INFO/SPI_ATTACH正常，FLASH_BEGIN在60秒无回复；客户确认完整断电首次下载仍失败，不能只用重复软复位解释。电脑对App签名块0验证通过、1/2未用跳过；Key0未撤销、Key1/2撤销不自动表示故障，仍缺当前PEM与芯片摘要一致性证据。ROM显示bootloader RSA-PSS验证成功，ota_0@0x40000读到invalid segment length 0xffffffff属App镜像解析失败，未证明App验签失败。重点怀疑DOWNLOAD_MODE_XPD_ON遗漏，但该线程无实际位读取与IDF2553c5ad实现核查；与本聊天另由公司回复确认未配置的支持汇总分开记证据，不擅自认定两个记录完全同板。esptool5.6.0无Stub FLASH_BEGIN使用erase_region_timeout_per_mb，原配置erase_write_timeout_per_mb=120不能延长此阶段；延长等待只为诊断。无修复完成或eFuse/硬改验证，不保存私钥路径。
 
 ### 无启动日志、无法握手与 entry 后间歇看门狗如何分开排查
 - **客户问题/现象**：同批板有无ROM响应、历史校验错误及entry后间歇CHIP_LP_WDT_RESET。
@@ -212,3 +222,10 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
   增量补充（2026-10-31整理）：2026-10-27咨询同一HUB混合FS/HS：当时官方栈未支持TT/Split Transaction，不能保证HS主机经HS HUB同时按各自速率使用FS/HS外设，换外置HUB也不解决栈限制；可用全HS组合，或在支持的栈版本设置fsls_only使总线降速，但不能保留HS。未实板混合测试，按具体组件版本复核。[Host限制](https://docs.espressif.com/projects/esp-usb/en/latest/esp32p4/usb_host.html)。
   本周支持汇总补充（2026-10-31入库）：周报再次记录同一HUB混用FS/HS时回复“不支持”。该回复仅补作支持记录，沿用本条对当时官方栈TT/Split Transaction的版本限定，不表述为芯片/HUB永久硬件不支持；无新的混合速率实板结果，不新增重复技术结论。
 - **相关报错/日志**：`sdio` 无关；应提供 USB 枚举日志和设备速度。
+
+## 待核型号的关联案例
+
+- [[ESP32-P4-通用问题#4-lane MIPI 屏能否改为 2-lane 使用]]
+- [[ESP32-P4-通用问题#第三方 GT911 触摸是否属于已适配支持]]
+
+原汇总同时出现Module-DEV-KIT-C和WIFI6-DEV-KIT，具体板型待确认。

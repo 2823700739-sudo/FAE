@@ -38,3 +38,7 @@ tags: [FAE, ESP32-P4, 摄像头, MIPI-CSI]
 - **根因**：两个 Type-C 都可供电和烧录；标为 UART 的 Type-C 还经串口芯片用于日志调试。USB OTG 2.0 HS 单独由 MX1.25 4Pin 接口引出，而非这两个 Type-C 口之一。
 - **回复内容（解决方法）**：日常烧录和查看日志建议接 Type-C UART；需要连接 USB OTG 设备时使用 MX1.25 4Pin 接口及正确转接线，同时按 Host/Device 用途处理 VBUS 和供电，不要直接把任一 Type-C 当作 OTG Host 口。[官方硬件说明](https://docs.waveshare.net/ESP32-P4-Core-DEV-KIT/)。
 - **相关报错/日志**：无。
+
+## 关联案例
+
+- [[1.85inch-Touch-LCD-Module#搭配 P4 Core 刷新时出现条纹，应先查哪些环节]]：外接QSPI独立屏的刷新条纹排查，待复测。

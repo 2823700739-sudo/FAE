@@ -73,6 +73,7 @@ tags: [FAE, ESP32-P4, LCD, 摄像头, 音频]
 - **涉及产品/型号**：ESP32-P4-WIFI6-Touch-LCD-7B、OV5647。
 - **根因**：页面中32KB为低功耗SRAM，板载PSRAM为32MB；传感器标称帧率不等于整板实测。
 - **回复内容（解决方法）**：PSRAM为32MB，另有32MB Flash。OV5647传感器规格可达1080p@30fps、720p@60fps；接到该板后的采集、显示或传输帧率取决于驱动与处理链，需按工程实测。
+  2026-11-02补充：今日客户追问Flash容量/扩容：本次在线[产品规格](https://docs.waveshare.net/ESP32-P4-WIFI6-Touch-LCD-7B/)确认32MB Nor Flash与32MB PSRAM分开；[乐鑫硬件指南](https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32p4/schematic-checklist-esp32p4.html#flash-and-psram)写芯片最大支持64MB外部Flash，并不表示此板已装64MB。扩容涉及替换Flash及电气/封装/工具/固件/分区适配，未验证本板改装，不能只改配置扩出物理容量。来源：《查找 ESP32-P4-WIFI6-Touch-LCD-7B》。
 - **相关报错/日志**：无。
 
 ### P1 的 BAT 输入电压和建议电流
@@ -161,6 +162,13 @@ tags: [FAE, ESP32-P4, LCD, 摄像头, 音频]
 - **根因**：该板不是无缝Power-Path/UPS设计。USB存在时，`VCC_5V → R67 → Q5` 把电池升压U17的EN拉低；拔掉USB后VCC_5V先下降，Q5才释放EN，U17再经C166=47nF软启动，约需11.3ms后才建立Boost_5V并经Q7回到VCC_5V。现有约67µF输出电容无法在屏幕、P4与Wi-Fi负载下维持空档，导致Core_5V/ESP_3V3跌落。ETA6098只负责充电，没有独立SYS Power-Path。
 - **回复内容（解决方法）**：若单独USB和单独电池都稳定，仅插拔瞬间重启，则优先按电源架构特性处理。用示波器同时测VCC_5V、U17 EN、Boost_5V和Core_5V/ESP_3V3，并触发在Type-C拔出沿；若电源轨不跌落再查CH343P DTR/RTS是否给ESP_EN复位脉冲。可靠改版应使用真正的Power-Path/电源MUX，或让升压热备并通过理想二极管无缝OR；不要简单拆Q5，也不建议只并大电容，以免争流、循环供电和浪涌。
 - **相关报错/日志**：软启动估算 `tSS = 47nF × 1.2V / 5µA ≈ 11.3ms`；⚠️ 最终应以VCC_5V/Core_5V实测跌落和复位日志确认。
+
+### 板载 RS485 是全双工还是半双工
+- **客户问题/现象**：客户依据原理图询问RS485通信模式，并追问如何区分全/半双工。
+- **涉及产品/型号**：ESP32-P4-WIFI6-Touch-LCD-7B。
+- **根因**：原问答核对[该板原理图](https://www.waveshare.net/w/upload/e/e3/ESP32-P4-WIFI6-Touch-LCD-7B.pdf)：发送和接收共用一对A/B差分线，是两线半双工接口。
+- **回复内容（解决方法）**：可双向通信，但收发轮流进行，不能同时双向发送。全双工RS485通常将TX与RX各用一对差分线，共四根通信信号；接口附带电源和GND不算第二对通信线。配置固件时仍需按收发器设计处理方向控制，并统一波特率/校验/协议；半双工不妨碍实现Modbus RTU。
+- **相关报错/日志**：🔍 原问答为图纸判断，无今日总线联调结果。来源：2026-11-02客户问题项目及同目录聊天《确认 RS485 通信模式》，逐条读取用户问题与最终答复；除另注外未本次实机验证。
 
 ## 其他问题
 

@@ -40,6 +40,13 @@ tags: [FAE, ESP32-P4, Ethernet, UART, 供电, 烧录]
 - **回复内容（解决方法）**：不带板载Wi-Fi和蓝牙，联网使用RJ45百兆网口。需要无线只能外接模块并适配软件，不能仅靠刷固件开启。
 - **相关报错/日志**：无。
 
+### 以太网口与 P4 之间是 UART 还是 RMII，具体怎样连接
+- **客户问题/现象**：客户询问以太网连接方式并追问是否TTL串口。
+- **涉及产品/型号**：ESP32-P4-ETH、P4 MAC、IP101GRI PHY、RJ45。
+- **根因**：原图纸核查为P4内置MAC→RMII→外置PHY→RJ45内变压器，不是UART收发协议。
+- **回复内容（解决方法）**：按[该板图纸](https://files.waveshare.com/wiki/ESP32-P4-ETH/ESP32-P4-ETH-datasheet.pdf)：TXD0/1=GPIO34/35、TXEN49；RXD0/1=GPIO29/30、CRS_DV28；REF_CLK50、MDC31、MDIO52、PHY_RESET51。IP101GRI由25MHz基准产生50MHz参考并送P4及PHY的RMII时钟输入。MDC/MDIO用于PHY管理，实际数据走RMII；不能用TTL UART模块或串口驱动替代。数字为P4 GPIO，按准确板次核对，不套用其他ETH底板。
+- **相关报错/日志**：🔍 原问答按图纸核对10/100Mbps链路结构，无本次网口通信测试。来源：2026-11-03《查找 ESP32-P4-ETH 以太网连接方式》，本次逐条读取原聊天；资料/源码分析与实机结果分开记录。
+
 ## 其他问题
 
 ### 共地开关冲击时为什么可能总损坏 CH343P

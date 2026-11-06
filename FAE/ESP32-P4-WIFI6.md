@@ -130,6 +130,13 @@ tags: [FAE, ESP32-P4, 供电, WiFi, 摄像头, WebRTC]
 - **回复内容（解决方法）**：三路独立CAN总线需要3个支持3.3V逻辑的收发器，可评估CAN0 GPIO30/31、CAN1 GPIO28/29、CAN2 GPIO32/33作为TX/RX；每条总线仅在两个物理末端各放一个120Ω终端电阻。若只是同一条总线连接3个设备，只需1个TWAI控制器和1个收发器，把各设备CANH/CANL并联并共地。P4已有TWAI控制器，一般无需再使用MCP2515；若收发器以5V供电，必须确认有独立3.3V VIO，不能让5V RXD直接进入P4。
 - **相关报错/日志**：🔍 GPIO可经Matrix重映射，上述推荐需结合当前板卡版本及其他外设占用再次核对；ESP32-P4 TWAI为经典CAN 2.0，最高1Mbit/s，不是CAN FD。
 
+### 22Pin DSI 的 I2C、RESET 扩展和 PWM 怎样使用，3.3V能带多少电流
+- **客户问题/现象**：明确为非NANO的WIFI6/WIFI6-M，第三方ST7701S屏希望只用一条22Pin排线，询问I2C、复位、250～300mA供电及PWM。
+- **涉及产品/型号**：ESP32-P4-WIFI6/WIFI6-M、J2、GPIO7/8、U1 MP1658GTF-Z。
+- **根因**：原聊天按[该板原理图](https://files.waveshare.com/wiki/ESP32-P4-WIFI6/ESP32-P4-WIFI6-datasheet.pdf)确认J2-1为ESP_3V3、J2-2 SDA=GPIO7、J2-3 SCL=GPIO8；共享3.3V电源与共享I2C均需计算占用。
+- **回复内容（解决方法）**：可在转接板用I2C GPIO扩展器控制LCD_RESET，匹配地址/电平、默认态和复位时序，软件通过扩展器操作。要保留I2C又需调光，可选符合背光DIM频率的I2C PWM器件；普通TCA9554无专用硬件PWM。客户最后澄清是DSI的SDA/SCL能否直接PWM：GPIO7/8可评估路由LEDC，但改用后不能同时维持本总线I2C，影响ES8311、CSI与所接扩展器；PWM只接背光驱动DIM而非带背光功率。U1为MP1658GTF-Z，图标3A MAX是整板共享能力，尚未确认J2持续额外250～300mA；需结合板负载、FPC/连接器额定值、压降/温升和真实屏启动峰值验证。ST7701S型号不能代替模组DSI规格，仍核对lane和初始化。
+- **相关报错/日志**：🔍 图纸/软件方案核对，未取得该接口持续300mA正式保证或实测。来源：2026-11-04《确认P4-WIFI6的DSI接口能力》，本次逐条读取原聊天；资料/源码分析与实机结果分开记录。
+
 ## 其他问题
 
 ### OV5647 预览中人脸占比太大，如何缩小显示
@@ -158,6 +165,7 @@ tags: [FAE, ESP32-P4, 供电, WiFi, 摄像头, WebRTC]
 - **涉及产品/型号**：ESP32-P4-WIFI6。
 - **根因**：板载 Type-C 经 CH343P 只提供 UART；内置 USB-JTAG 的 GPIO24/25只引到 40Pin。
 - **回复内容（解决方法）**：JTAG 需把 GPIO24(D-)/GPIO25(D+)和 GND 接到 USB，安装 Espressif驱动后用 `board/esp32p4-builtin.cfg`。不接 JTAG 时可启用运行时 GDB Stub，经板载串口中断、设断点和单步，但不适合 Bootloader、严重死机和复杂多核实时问题。目标芯片必须供电，“断电调试”不可行。
+  2026-11-02补充：《查找 ESP32-P4-WIFI6 的 JTAG 接口》再次确认所问为P4内置USB Serial/JTAG：USB D−接GPIO24、D+接GPIO25、GND共地，无需额外四线JTAG探头。按[官方引脚图](https://www.waveshare.net/photo/development-board/ESP32-P4-WIFI6/ESP32-P4-WIFI6-details-inter.jpg)和丝印定位，避免只凭板子摆放方向数针；板载Type-C为CH343P串口，底部白色4Pin为HS OTG，均与GPIO24/25通道不同。板子可由原Type-C供电，转接USB不随意并接额外5V。原问答为接口/图纸核对，无新实板断点测试。
 - **相关报错/日志**：`CONFIG_ESP_SYSTEM_GDBSTUB_RUNTIME`。
 
 ### C6 使用 AT 固件还是 ESP-Hosted 固件
@@ -224,3 +232,10 @@ tags: [FAE, ESP32-P4, 供电, WiFi, 摄像头, WebRTC]
 - **回复内容（解决方法）**：先取下 MicroSD、断开外设，测试程序阶段 A 仅将 GPIO47/48 置高，阶段 B 调用 `esp_ldo_acquire_channel()`，设 `.chan_id=4`、`.voltage_mv=3300` 并保持句柄有效，再测两 GPIO。`ESP_LDO_VO4` 可在 C32（或 C31）非接地端测量：断电时先用通断档识别接地端，上电后黑表笔接 GND、红表笔小心接另一端；对比两阶段的 VO4 和 GPIO。A≈1.2V、B≈3.3V 指向初始化问题；VO4 始终低则查 LDO 配置/负载/短路；VO4≈3.3V 而 GPIO 低则查复用或外部负载。客户已反馈测试代码现象正常，说明所测板可通过正确开启 LDO4 达到预期；但原工程具体缺失处仍需代码对照。项目示例见 `ESP32-P4-WIFI6-LDO4-GPIO-Test`，通用机制也见 [[ESP32-P4-Pico#GPIO47/48 拉高后仅约 1.2 V]]。
   增量补充（2026-10-31整理）：2026-10-24追问3V3到GND仅1V多：丝印3V3/ESP_3V3是独立电源，不需靠LDO4代码开启；只有47/48所在VO4域才适用原记录。先确认测点、断外设测输入和3V3，不能对实际3V3欠压直接套用软件修复。
 - **相关报错/日志**：客户反馈“测试代码运行现象没有问题”，未提供具体 VO4/GPIO 数值；⚠️ 勿将 3.3V 从外部硬灌 GPIO，通断档仅可在断电时使用。
+
+### 串口更新板载 C6 到一半断连，如何重新进入下载模式
+- **客户问题/现象**：客户称C6串口升级Host过程中中断；按支持提供的下载模式步骤后反馈“可以了”。
+- **涉及产品/型号**：ESP32-P4-WIFI6板载ESP32-C6；原表简称ESP32-P4-WIFI6-C6，实际板次待确认。
+- **根因**：⚠️ 中断根因未附日志；正确进入下载态后客户反馈恢复，不能据此认定Host固件本身出错。
+- **回复内容（解决方法）**：原支持步骤：断开开发板Type-C，保留C6 UART连接，C6 IO9拉低；按住P4 BOOT重新接Type-C，松开P4 BOOT后烧录C6。按实际板图核对3.3V TTL、TX/RX交叉、共地与BOOT条件；IO9短接保持到烧录结束，成功后整机断电再拆短接。P4 BOOT用于使P4暂停业务，不能代替C6自身IO9下载条件。C6应选esp32c6和匹配的Hosted Slave/network_adapter镜像，客户口述“升级Host”不能直接认定烧给C6的是P4 Host包。
+- **相关报错/日志**：状态：客户反馈“可以了”，有恢复结果；未附原中断日志和包版本。来源：本聊天用户提供的27项客户支持汇总，2026-11-04入库；原个案时间及原始附件未提供。
