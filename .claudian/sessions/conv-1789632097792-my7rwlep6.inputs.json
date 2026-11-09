@@ -43,6 +43,20 @@
       "contentDigest": "8dbaf5ad61131b202e56911c3b62a296cb75d3e45723bd50af223ab797cdd3f6",
       "providerUserMessageId": "01a1590f-1449-78e3-b573-6768b86c61f7",
       "providerAssistantMessageId": "msg_07cb2142862927bc016ad7508510bc8191a0a53e3079ff0646"
+    },
+    {
+      "schemaVersion": 1,
+      "id": "msg-1793951723744-f11yqus",
+      "userTurnOrdinal": 1,
+      "state": "accepted",
+      "localMessageId": "msg-1793951723696-x8rj8f2",
+      "timestamp": 1793951723699,
+      "rawDisplayText": "总结一下客户遇到的主要问题，分为硬件和软件，以及其他类型分类，分析一下有哪些需要改进优化的地方",
+      "canonicalText": "总结一下客户遇到的主要问题，分为硬件和软件，以及其他类型分类，分析一下有哪些需要改进优化的地方",
+      "images": [],
+      "contentDigest": "4aec5ea8554377f4e31e5c17afb3a6da305d6ffa24f057cf80c5089e14fcbd86",
+      "providerUserMessageId": "01a1afdb-1544-70a0-a964-05151bc276e0",
+      "providerAssistantMessageId": "msg_07cb2142862927bc016aed885c85c08191ae5218faf4fd1f3c"
     }
   ]
 }

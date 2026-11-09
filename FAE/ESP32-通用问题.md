@@ -73,6 +73,7 @@ tags: [FAE, ESP32, LVGL, Arduino, ESP-IDF]
 - **涉及产品/型号**：未明确，目标为ESP32-S3。
 - **根因**：⚠️ 原始错误文本未保留在聊天正文，仅有截图，不能进一步确认。
 - **回复内容（解决方法）**：手动删除项目 `build`，PowerShell执行 `chcp 65001`、设置 `PYTHONUTF8=1`，再 `idf.py set-target esp32s3` 和 `idf.py build`。若仍失败应补充可复制的完整日志。
+  2026-11-09补充：2026-11-09《确认双眼屏能否连接树莓派4B》中的另一个问题为P4相机工程VS Code IDF插件构建失败：Build task failed仅汇总信息，需首个CMake/FAILED/Traceback及终端完整日志。原问答进一步记录插件调用CMake异常0xC0000409、中文路径对照有乱码/找不到文件，已准备英文路径C:/Users/admin/Documents/ChatGPT/TEST/P4-Camera-Center并指向IDF5.5.5，命令行构建通过但插件仍待验证；不能仅凭异常码断言代码溢出或所有中文路径均不可用。用明确版本的ESP-IDF终端/插件选择一致，先单独Build，仍失败用Doctor报告比环境。上文set-target esp32s3只限旧S3截图，本P4案例必须esp32p4；重建缓存前保留原日志/配置，不能全量套旧步骤。
 - **相关报错/日志**：原始日志缺失。
 
 ### 烧录时报 No serial data received

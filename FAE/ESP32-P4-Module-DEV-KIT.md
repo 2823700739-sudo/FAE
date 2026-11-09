@@ -229,3 +229,10 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - [[ESP32-P4-通用问题#第三方 GT911 触摸是否属于已适配支持]]
 
 原汇总同时出现Module-DEV-KIT-C和WIFI6-DEV-KIT，具体板型待确认。
+
+### USB TO UART 怎样打印应用日志，只见启动信息怎么办
+- **客户问题/现象**：客户希望通过板载USB转串口查看日志。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、CH343P、P4 UART0 GPIO37/38。
+- **根因**：USB-UART物理连接、应用console通道和日志等级须同时匹配；可见ROM启动信息不代表应用也选相同输出。
+- **回复内容（解决方法）**：用数据线连接标注USB TO UART的Type-C，确认新增COM；按实际CH343设备安装驱动，无需另接TTL。IDF menuconfig搜索ESP_CONSOLE，选择Default UART0/115200，并确认日志等级Info或更详细；应用包含esp_log.h后用ESP_LOGI。重编译/烧录后以IDF Monitor或串口终端115200、8N1、无流控查看，二者不同时占同COM。只见复位启动、不见应用日志时查console是否仍走USB Serial/JTAG、配置是否生效以及打印路径是否执行；不要混接另一原生USB口。[原图](https://www.waveshare.net/w/upload/a/a9/ESP32-P4-Module-DEV-KIT.pdf)。
+- **相关报错/日志**：🔍 按原理图与IDF配置说明，未实际接板确认本次日志输出。来源：2026-11-09《说明 USB转UART 打印日志方法》，本次完整读取原问答；除另注外未实板复测。

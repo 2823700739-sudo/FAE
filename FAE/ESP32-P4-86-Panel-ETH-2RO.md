@@ -2,7 +2,7 @@
 产品: ESP32-P4-86-Panel-ETH-2RO
 tags: [FAE, ESP32-P4, 工控, 继电器]
 ---
-
+运行出场固件功耗：5V  ,0.4A
 # ESP32-P4-86-Panel-ETH-2RO
 
 > [!important] ⚠️ 产品参数 / 规格优先

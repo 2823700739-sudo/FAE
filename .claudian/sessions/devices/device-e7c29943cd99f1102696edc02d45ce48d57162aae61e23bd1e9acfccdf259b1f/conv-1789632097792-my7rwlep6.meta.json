@@ -1,10 +1,10 @@
 {
   "id": "conv-1789632097792-my7rwlep6",
   "providerId": "codex",
-  "title": "置顶产品参数问题并添加醒目提醒",
+  "title": "分类总结客户问题及改进方向",
   "titleGenerationStatus": "success",
   "createdAt": 1789632097800,
-  "lastActivityAt": 1792495754938,
+  "lastActivityAt": 1793951916964,
   "sessionId": "01a1590f-092d-7860-b94e-05fce521c1c0",
   "selectedModel": "gpt-5.6-sol",
   "providerState": {
@@ -15,13 +15,13 @@
     "workspaceDependencyToolVersion": 1
   },
   "usage": {
-    "inputTokens": 72676,
+    "inputTokens": 93376,
     "cacheCreationInputTokens": 0,
-    "cacheReadInputTokens": 71040,
+    "cacheReadInputTokens": 92160,
     "contextWindow": 258400,
     "contextWindowIsAuthoritative": true,
-    "contextTokens": 72676,
-    "percentage": 28,
+    "contextTokens": 93376,
+    "percentage": 36,
     "model": "gpt-5.6-sol"
   }
 }

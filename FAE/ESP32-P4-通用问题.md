@@ -52,6 +52,7 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **根因**：v1→v3 是主硅片版本变化，不只是频率调整。v3 最高主频由 360MHz 提升到 400MHz，并改动 CPU 指令/中断、L2MEM Cache、GDMA、ISP/PPA/H.264、低功耗和安全模块；裸芯片的 54 脚、USB_DP 与 DCDC 参考外围也有调整。启动阶段、ROM、内存布局和寄存器差异使面向两代芯片生成的 bootloader 与应用 BIN 不能通用。v1.3 有 EOL 规划风险，但不能表述为“已经停产”或“完全不能使用 IDF 6.0.2”。
 - **回复内容（解决方法）**：同一套业务源码通常可以共用，推荐维护两套构建配置并分别全量编译。使用 ESP-IDF v5.5.3+ 或 v6.0+：v1.x 启用 `CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y`，最低版本通常设 `CONFIG_ESP32P4_REV_MIN_100=y`；v3.x 关闭 pre-v3 选择，按需求设 `CONFIG_ESP32P4_REV_MIN_300=y` 或 `301=y`。切换版本后执行 `idf.py fullclean`，必要时移走旧 `sdkconfig` 后重新生成，不能用 `--force` 绕过版本检查。直接访问寄存器、私有 `soc` 头文件、汇编或预编译库的工程需要额外适配；PSRAM、USB、SDMMC、摄像头、显示和休眠功能应分别实机回归。新项目优先确认 v3.1 或更高具体小版本；已有 v1.3 项目可继续维护，但量产应区分 v1/v3 固件。
   2026-11-06补充：2026-11-05《核实客户说法》讨论v1.3/PSRAM200MHz与720×720撕裂/崩溃：原问答引用官方升级通知，v1.3参考CPU360MHz/PSRAM200MHz、v3.2为400/250MHz，具体板参数仍按版本。v1.3修订号不能单独判工程样片；用户在后续明确其所述批次已核实为量产芯片，此为该批次反馈，不以数据手册版本号替代芯片批次证据。原问答区分v3.0所列MSPI勘误影响范围，不将其直接套v1.3；收集实际SDK/ESPHome、日志/回溯、显示配置、五台一致性及原厂固件对照后再判断。EOL规划与性能差异不能证明当前显示故障命中勘误，也不因原回复提停产通知就宣称已停止供货。
+  2026-11-09补充：2026-11-09《查找 P4 v3 运行 v1 代码的兼容方法》再次区分源码迁移与旧BIN通用：标准IDF API业务通常先升级SDK/切换revision重新构建，寄存器、第三方底层驱动和板级外设需代码审核，改动量不能未看工程就估定。menuconfig可从Component config→Hardware Settings→Chip revision取消旧版支持，同时检查defaults；REV_MIN不能高于实际芯片，不以降低门限或force绕过代际差异。本次核对[AR2026-004](https://documentation.espressif.com/AR2026-004_Compatibility_Advisory_for_ESP32-P4_Chip_Revision_v3.2_EN.html)：v3.2在外部32kHz时钟场景下相关WDT补丁，5.5分支至少5.5.5、6.0分支至少6.0.1；不是无条件宣称所有6.0初版均覆盖该修复。保留按代际成套构建bootloader/分区/应用的要求，无本次客户工程迁移实测。
 - **相关报错/日志**：`chip version mismatch`、`Illegal instruction`、`CONFIG_ESP32P4_SELECTS_REV_LESS_V3=y/n`。
 
 ### 如何从启动日志确认芯片 revision，ROM 和 eFuse 版本是否相同
@@ -119,6 +120,7 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
 - **涉及产品/型号**：ESP32-P4 v3.2、Arduino-ESP32 3.3.12、esptool5.1.0/5.3.1；具体板型未明确。
 - **根因**：⚠️ 首要怀疑工具兼容/实际路径不一致：v3.2的ROM Flash自动上电需新版esptool，5.1.0低于官方5.x最低5.3.dev3；Arduino包3.3.12官方依赖为5.3.1，和实际日志不同。不是编译容量不足，也不能由此判定Flash损坏。
 - **回复内容（解决方法）**：开启Arduino上传详细输出，查esptool.exe完整路径及命令，确认当前使用哪个开发板平台；必要时在开发板管理器重装Espressif esp32 3.3.12并重启IDE。以实际上传日志出现5.3.1为准，仅pip升级未必改变Arduino自带工具。Upload Speed先设115200，不改Serial.begin；再用短线直连/稳定供电、断外设复测。若仍失败保留从Connecting到异常的完整日志、实际revision和工具路径再定位。[v3.2公告](https://documentation.espressif.com/AR2026-004_Compatibility_Advisory_for_ESP32-P4_Chip_Revision_v3.2_EN.html)、[Arduino3.3.12依赖](https://github.com/espressif/arduino-esp32/blob/3.3.12/package/package_esp32_index.template.json)。
+  2026-11-09补充：2026-11-06新截图为编译完成、P4 v3.2、esptool5.1.0在attach_flash/flash_id停止，上传已115200；板型和Arduino菜单仍未明确。优先核对实际工具路径，独立工具按当前兼容版先作只读flash-id测试；pip不会自动替换Arduino内置工具，也无需重复把已115200再降为同值。电脑上Wrote ... to file merged.bin只是生成合并文件，不代表已写到芯片。本例与旧3.3.12依赖案例相近，但未从截图确认客户包版本相同，不合并成同一块板；无硬件损坏或升级修复证据。
 - **相关报错/日志**：`attach_flash → flash_id → run_spiflash_command → read_reg`；`StopIteration`；`A fatal error occurred: The chip stopped responding.`；`Stub flasher running.`；未确认升级后恢复。来源：2026-10-20“排查 ESP32-P4 烧录失败”。
 
 ### PSRAM test OK 后串口断开是不是内存损坏
@@ -178,6 +180,7 @@ tags: [FAE, ESP32-P4, ESP-IDF, LVGL, 编译]
   新增Arduino案例：P4 v3.2在Stub运行后切到921600报Invalid head of packet (0x0D)，优先把工具菜单Upload Speed降到115200；无需修改代码Serial.begin。此类高速失败不等于Flash损坏，尚未实测确诊。
   2026-10-20补充revision兼容性：P4 v3.2使用esptool 4.x至少4.12.dev2、5.x至少5.3.dev3，以适配ROM Flash自动上电；先确认实际调用版本/路径，再做降速或Stub隔离。不能把v3.2的已知工具要求都归为串口噪声，更不能仅凭noise字样宣称ROM协议整体改变。v1.x换v3.x仍需成套重新构建bootloader/应用。[官方v3.2公告](https://documentation.espressif.com/AR2026-004_Compatibility_Advisory_for_ESP32-P4_Chip_Revision_v3.2_EN.html)。具体Flash ID阶段案例见[[ESP32-P4-通用问题#P4 v3.2 在 attach_flash 读取 Flash ID 时停止响应]]。
 - **相关报错/日志**：`Changing baud rate to 460800`、`Using the new stub flasher`、`Stub running...`、`Unable to verify flash chip connection`、`Invalid head of packet (0x20/0x50/0xA4): Possible serial noise or corruption.`；应用分区仍有余量或Bootloader空间警告不是本次通信错误原因。
+  2026-11-09补充：2026-11-09截图新增ESP-IDF5.5.4、P4 v3.2、esptool4.12.dev1，Stub后切460800报Invalid head of packet(0x61)。原答优先升级实际IDF Python环境的工具，并115200对照；本次AR2026-004再次确认4.x最低4.12.dev2/5.x最低5.3.dev3。需保留原镜像/地址并按实际SDK依赖安装，不以电脑另一个Python已pip升级推定IDF已更新；该包头不是Flash损坏证明，尚无升级后恢复反馈。
 
 ### Wi-Fi 重复注册 netif 导致 lwIP 断言崩溃
 - **客户问题/现象**：ESP32-P4平台启动时先出现摄像头I2C NACK，随后Wi-Fi初始化触发`netif already added`并崩溃。
