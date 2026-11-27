@@ -282,3 +282,11 @@ tags: [FAE, ESP32-P4, 供电, WiFi, 摄像头, WebRTC]
 - **根因**：esptool通常先与ROM握手再上传RAM stub；--no-stub可跳过stub，但ROM Flash访问为24位地址，超过16MiB存在地址截断/回绕限制。
 - **回复内容（解决方法）**：可用匹配P4的esptool，以低速115200和只读flash-id先验证ROM通信。使用--no-stub时每段offset+length不得超过0x1000000，不将32MB整片读写套入ROM模式；超过16MiB应使用支持该地址范围的stub或匹配的应用/OTA方案。安全下载模式不能运行stub时，按安全下载约束另行规划，不能靠换参数保证整片访问。参考[esptool P4故障排查](https://docs.espressif.com/projects/esptool/en/latest/esp32p4/troubleshooting.html)。
 - **相关报错/日志**：🔍 仅方式与边界核对，无本板ROM读写结果。 来源：2026-11-23《确认 ESP32-P4 的 ROM 刷写方式》。
+
+### 自制底板异常供电且 VBUS 与 VSYS 短接后烧板，怎样定位
+- **客户问题/现象**：客户称自制底板上电烧板，事故时VBUS与VSYS相连；又称5V稳压器VOUT/FB接反、输出纹波大。
+- **涉及产品/型号**：ESP32-P4-WIFI6，客户自制底板P4D.pdf V1.0。
+- **根因**：若事故实物确实短接40脚VBUS/USB0_5V与39脚VSYS/VCC_5V，异常输出可同时进入USB侧与板载5V负载，并旁路原电源切换。纹波不能证明过压峰值、损坏顺序或P4已烧毁；客户图纸与事故实物描述也不完全一致。
+- **回复内容（解决方法）**：先断开USB、底板和外设，不要继续用异常电源上电。断电比较VBUS、VSYS和3V3对地稳定阻值，与好板同条件对照：VBUS侧查TVS1、CH343P及电容；VSYS侧查主降压/音频稳压及下游。排除明显短路后才由专业人员用限流稳定5.0V单独给VSYS，先查3V3再看启动，避免将串口芯片故障当主控损坏。底板单独修复，示波器抓启动峰值和带载输出后再接开发板。原问答发现P4D图中VSYS接+5V而VBUS另引出，LM2596HVS-ADJ的FB直接接电感后输出且缺分压；这与客户报告的实物2/4脚反接属于不同状态，需按事故板真实接线及准确芯片手册核对。正常底板5V使用VSYS/GND，不再将VBUS短接。
+- **相关报错/日志**：⚠️ 来源问答：2026-11-26《排查 ESP32-P4-WIFI6 烧板原因》；无事故峰值波形、故障器件检测或修复复测，不能认定先烧VBUS再串烧全板。
+- **来源与资料**：[微雪开发板原理图第1页](https://files.waveshare.com/wiki/ESP32-P4-WIFI6/ESP32-P4-WIFI6-datasheet.pdf)；客户P4D.pdf V1.0第1页及事故实物描述（本条记录差异，不把图纸当事故接线证明）；[RT9193手册](https://www.richtek.com/assets/product_file/RT9193/DS9193-18.pdf)；[原答参考LM2596HV手册](https://www.umw-ic.com/static/pdf/372f239898cc5cb103e2499dd196c020.pdf)。

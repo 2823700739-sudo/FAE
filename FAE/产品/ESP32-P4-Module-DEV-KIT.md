@@ -236,6 +236,22 @@ tags: [FAE, ESP32-P4, 摄像头, ESP32-C6, USB, UART]
 - **回复内容（解决方法）**：可从esp-video-components的simple_video_server抓拍入口及P4 ISP/JPEG链路开始；原问答参考17_simple_video_server。所查RAW ISP链路按1920×1080范围评估，不能据OV5647的500万像素就保证输出全分辨率JPEG。要自动存卡还需集成SDMMC挂载、文件写入和资源调度；浏览器抓拍不等于已实现本地存卡。[上游ISP限制讨论](https://github.com/espressif/esp-video-components/issues/63#issuecomment-3868322834)。
 - **相关报错/日志**：🔍 版本相关的开发路径，未完成拍照存卡程序或硬件验证。 来源：2026-11-20《查询 OV5647 抓拍与 MicroSD》。
 
+### 是否支持 ADC，P6 哪些脚可采集模拟电压
+- **客户问题/现象**：客户询问是否有ADC转换功能。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT，P6 40Pin排针。
+- **根因**：P4有两组ADC，默认12位；芯片通道能力、排针引出与板载功能占用必须分别核对。
+- **回复内容（解决方法）**：优先选GPIO20（P6第14脚，ADC1_CH4），信号地接P6第13脚等GND。另有GPIO21/P6-12=ADC1_CH5、GPIO22/P6-11=ADC1_CH6、GPIO23/P6-8=ADC1_CH7。GPIO53/P6-36=ADC2_CH4，但共用功放使能；GPIO54/P6-31=ADC2_CH5，但模组内部连C6 EN/复位，不应在保留无线功能时直接当空闲模拟输入。输入量程按衰减和校准配置确定，0～3.3V是最高有效量程描述，不是任意配置均可线性测满或过压耐受保证；测5V先分压并核对分压后峰值。
+- **相关报错/日志**：🔍 来源问答：2026-11-27《确认 ESP32-P4-Module-DEV-KIT 的 ADC 支持》；本次查看P6图纸并补上GPIO54共享限制。未采样精度/量程实测。
+- **来源与资料**：[乐鑫ADC通道表](https://docs.espressif.com/projects/esp-hardware-design-guidelines/en/latest/esp32p4/schematic-checklist-esp32p4.html#adc)；[ADC文档](https://docs.espressif.com/projects/esp-idf/en/stable/esp32p4/api-reference/peripherals/adc/index.html)；[P4数据手册§5.5](https://documentation.espressif.com/esp32-p4_datasheet_en.pdf)；[[FAE/资源/资料/ESP32-P4-Module-DEV-KIT/ESP32-P4-Module-DEV-KIT-原理图-2026-11-27.pdf|官方图纸快照第1页P6]]；[[ESP32-P4-Module-DEV-KIT#P4 能否单独复位或断电重启 C6|GPIO54的C6复位用途]]。
+
+### 排针能否扩展 CAN，最多几路以及 TX/RX 怎样选
+- **客户问题/现象**：先问是否支持CAN，再问可用GPIO和独立通道路数。
+- **涉及产品/型号**：ESP32-P4-Module-DEV-KIT、P4 TWAI、ESP-IDF5.5。
+- **根因**：芯片有3个经典CAN/TWAI控制器，但本板没有CAN收发器；GPIO Matrix可分配信号不代表板上所有GPIO都可用。
+- **回复内容（解决方法）**：最多评估3路独立经典CAN，每路2个空闲GPIO加1个匹配3.3V逻辑的收发器。图纸候选为TX/RX：①GPIO4/P6-17与GPIO5/P6-15；②GPIO20/P6-14与GPIO21/P6-12；③GPIO22/P6-11与GPIO23/P6-8。以SN65HVD230模块为例，P6-18为3.3V、P6-19为GND；TX/RX接模块逻辑侧，CANH/CANL只能从收发器总线侧接出。IDF5.5的io_cfg.tx/rx填GPIO编号而非排针物理号。核对用户程序、启动脚、USB/串口/I2C及ADC/电机等占用；这些候选与本页TB6612及ADC方案不能同时无冲突使用。P4 TWAI不支持CAN FD。
+- **相关报错/日志**：🔍 来源问答：2026-11-26《确认 ESP32-P4-Module-DEV-KIT 的 CAN 支持》，3轮完整读取；P6针号已核对，未做单路或三路并行收发测试。
+- **来源与资料**：[官方引脚定义](https://docs.waveshare.net/ESP32-P4-Module-DEV-KIT/#引脚定义)；[[FAE/资源/资料/ESP32-P4-Module-DEV-KIT/ESP32-P4-Module-DEV-KIT-原理图-2026-11-27.pdf|原理图第1页P6]]；[IDF5.5 TWAI](https://docs.espressif.com/projects/esp-idf/zh_CN/release-v5.5/esp32p4/api-reference/peripherals/twai.html)；[TI SN65HVD230](https://www.ti.com/product/SN65HVD230)。
+
 ## 其他问题
 
 ### 安全启动后 USB 烧录在擦除阶段中断是否已锁死

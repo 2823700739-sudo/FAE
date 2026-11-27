@@ -68,4 +68,6 @@ tags: [FAE, ESP32-P4, Ethernet, UART, 供电, 烧录]
 - **涉及产品/型号**：ESP32-P4-ETH。
 - **根因**：以太网不是ROM默认下载接口；只有现有应用已实现以太网OTA时才能升级。
 - **回复内容（解决方法）**：已有可运行OTA程序和OTA分区时，可Type-C供电并经网口升级。首次烧录、当前固件无OTA、应用无法启动或救砖时，仍需USB/串口等下载接口，不能把RJ45直接当烧录口。
-- **相关报错/日志**：无。
+  2026-11-27增量补充：2026-11-26《确认 ESP32-P4-ETH 网络调试能力》提出网口调试与Type-C选择。RJ45可调试网络应用，远程日志/OTA需预装对应固件；ROM首次烧录和故障恢复不因接网线而可用。原答进一步称“板载Type-C直接用内置USB JTAG断点/单步”，与本次下载的公开官方图纸（未标明确版次）不符：第1页H2 Type-C的USB_DBG_D±进入U4 CH343P，再到P4 UART0 GPIO37/38。板载Type-C适合供电、UART烧录与串口日志，不能把USB转串口枚举当JTAG。内置USB Serial/JTAG需另从P1第19脚GPIO24 D−、第20脚GPIO25 D+及GND接USB数据，具体接法见本页JTAG条目；外接四线JTAG也须核对通路。不同版次按实物对应图纸复核。
+- **相关报错/日志**：🔍 本次图纸整页与局部核对，未做USB JTAG连接、OpenOCD、以太网OTA或远程日志实测。
+- **来源与资料**：2026-11-26《确认 ESP32-P4-ETH 网络调试能力》2轮问答；[官方原理图](https://files.waveshare.com/wiki/ESP32-P4-ETH/ESP32-P4-ETH-datasheet.pdf)；[[FAE/资源/资料/ESP32-P4-ETH/ESP32-P4-ETH-原理图-2026-11-27.pdf|本次原图快照第1页]]；![[FAE/资源/图片/ESP32-P4-ETH/ESP32-P4-ETH-TypeC-CH343P路径-2026-11-27.png]]；[[ESP32-P4-ETH#USB Serial/JTAG 与四线 JTAG 分别如何连接|本页JTAG接线]]。

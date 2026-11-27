@@ -134,6 +134,14 @@ tags: [FAE, ESP32-S3, LCD, 音频, 供电, GPIO]
 - **回复内容（解决方法）**：按[本板原理图](https://www.waveshare.net/w/upload/8/82/ESP32-S3-Touch-LCD-4B.pdf)，播放为ESP32→ES8311 DSDIN→模拟输出/功放/喇叭，采音为麦克风→ES7210 SDOUT1经R58→I2S_ASDOUT→ESP32。保留原板录放方案不需补接ES8311 ASDOUT；只有另用ES8311自身ADC采音时才重新评估输入/输出连线与I2S配置。[ES8311手册](https://files.waveshare.com/wiki/common/ES8311.DS.pdf)。
 - **相关报错/日志**：🔍 来源：2026-11-12《查明音频芯片 ASDOUT 用途》图纸核对，非本次录放音实测；不由两个ADC芯片推断任意固件通道分工。
 
+### 现有 H3 引脚是否足够直接接 DVP、SPI 或 USB 摄像头
+- **客户问题/现象**：客户希望利用现有引脚连接摄像头。
+- **涉及产品/型号**：ESP32-S3-Touch-LCD-4B，H3 20Pin，TCA9554。
+- **根因**：8-bit DVP通常需8数据线、PCLK/XCLK/VSYNC/HREF及两根SCCB控制线，约14根信号；H3原生GPIO已分配给板载I2C、UART0、USB、BOOT及背光。EXIO0～7为I2C扩展口，不能采集高速DVP像素。
+- **回复内容（解决方法）**：保留板载功能时，不能直接从H3接OV2640/OV5640类DVP相机；四线SPI相机也需回收/复用已有原生GPIO并核对其具体附加信号。UVC可评估S3原生USB Host，但须验证Host接线、相机格式/带宽及5V供电，不能当已适配。若只是显示抓拍图，可用独立摄像头板经Wi-Fi发送JPEG，再由4B解码显示。不要将TCA9554扩展IO当高速相机并口。
+- **相关报错/日志**：🔍 来源问答：2026-11-26《确认 ESP32-S3-Touch-LCD-4B 摄像头引脚》；接口与开发路径分析，无相机接线、取帧或显示测试。
+- **来源与资料**：[本型号原理图第1页H3](https://files.waveshare.com/wiki/ESP32-S3-Touch-LCD-4B/ESP32-S3-Touch-LCD-4B.pdf)；[乐鑫DVP摄像头引脚示例](https://github.com/espressif/esp32-camera/blob/master/examples/camera_example/main/camera_pinout.h)；[UVC Host组件](https://components.espressif.com/components/espressif/usb_host_uvc)；本页[[ESP32-S3-Touch-LCD-4B#原生 USB-OTG 能否接 USB 键盘|USB Host接线与供电边界]]。
+
 ## 其他问题
 
 ### UART 使用 GPIO36/37 后 UI 闪屏或黑屏

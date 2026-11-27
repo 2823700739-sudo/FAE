@@ -89,6 +89,14 @@ tags: [FAE, ESP32-P4, HMI, 供电, 音频]
 - **回复内容（解决方法）**：选型按“4英寸IPS LCD、720×720、电容触摸”说明。屏幕背光VLED+/VLED−连接板侧LEDA/LEDK，与像素数据接口分开；不要按LED点阵屏的接口和驱动方式选配。不同产品名中的4B不可混用，本条仅对应P4型号。
 - **相关报错/日志**：🔍 原问答结论归档，未新增实板验证。 来源：2026-11-23《查找带触控功能的 LED 屏幕》。
 
+### 手机快充头能否供电，A转C和C转C应怎样选择
+- **客户问题/现象**：询问兼容的充电器型号及手机快充是否可用。
+- **涉及产品/型号**：ESP32-P4-WIFI6-Touch-LCD-4B，USB TO UART供电口。
+- **根因**：供电看适配器的5V输出档和受电连接，不看品牌或快充总瓦数；本次官方图中H1 Type-C UART的CC1/CC2分别经5.1kΩ下拉。
+- **回复内容（解决方法）**：USB-A适配器可先选5V/2A配A转C数据/电源线；2A只是选型建议，不是官方最低电流保证。符合USB-C规范、支持默认5V的PD快充头可评估普通C转C连接，板子没有因此请求9V/12V快充；禁止用诱骗线强制升压。记录屏幕/外设负载、线损和实际5V稳定性后再判断电源余量。
+- **相关报错/日志**：🔍 来源问答：2026-11-27《确认充电器兼容性》；本次查看官方图纸第1页H1/R1/R4，未测试具体充电头或满载稳定性。
+- **来源与资料**：[微雪产品资料](https://docs.waveshare.net/ESP32-P4-WIFI6-Touch-LCD-4B/)；[官方原理图](https://files.waveshare.com/wiki/ESP32-P4-WIFI6-Touch-LCD-4B/ESP32-P4-WIFI6-Touch-LCD-4B.pdf)；[[FAE/资源/资料/ESP32-P4-WIFI6-Touch-LCD-4B/ESP32-P4-WIFI6-Touch-LCD-4B-原理图-2026-11-27.pdf|本次图纸快照]]；[USB-C硬件指南](https://docs.espressif.com/projects/esp-iot-solution/en/latest/usb/usb_overview/usb_typec_hardware_guide.html)。
+
 ## 其他问题
 
 ### 底部排线位置出现局部漏光
